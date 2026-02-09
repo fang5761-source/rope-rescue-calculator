@@ -149,6 +149,8 @@
       .pill{margin-top: 10px;}
     }
 
+    #resultCard{margin-top:12px;}
+
     .card{
       background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
       border: 1px solid var(--line);
@@ -309,12 +311,7 @@
       padding: 0 2px;
     }
 
-    .twoBtns{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      margin-top: 12px;
-    }
+    .twoBtns{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px;}
 
     .toast{
       position: fixed;
@@ -385,12 +382,7 @@
   
 
 /* ===== UI tweaks (v1.1.1) ===== */
-.twoBtns{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-  margin-top:14px;
-}
+.twoBtns{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px;}
 .twoBtns .btn{
   width:100%;
   justify-content:center;
@@ -408,6 +400,7 @@
   margin-left:auto;
   padding-top:2px;
 }
+.modeTag.modeInline{align-self:center; opacity:.72; font-weight:700;}
 
 .cardBody label{
   font-weight:900;
@@ -467,7 +460,7 @@
 <h2 class="cardTitle">參數輸入</h2>
 <p class="sub">支援兩種角度表示：V 字夾角 β 或單側仰角 φ（相對水平）。</p>
 </div>
-<div class="modeTag" id="modeLabel">模式：對稱 V 角（兩固定點）</div>
+<div class="modeTag modeInline" id="modeLabel">模式：對稱 V 角（兩固定點）</div>
 </div>
 <div class="cardBody">
 <div class="row">
@@ -490,7 +483,7 @@
 <div class="btn" id="btnPhi">角度用 φ（單側仰角）</div>
 </div>
 <div class="sliderWrap" id="betaBox">
-<label for="beta">V 字夾角 β（度）</label><div aria-label="角度快捷" class="quickAngles"><button class="chip" data-angle="45" data-mode="beta" type="button">β 45°</button><button class="chip" data-angle="60" data-mode="beta" type="button">β 60°</button><button class="chip" data-angle="90" data-mode="beta" type="button">β 90°</button><button class="chip" data-angle="120" data-mode="beta" type="button">β 120°</button><button class="chip" data-angle="150" data-mode="beta" type="button">β 150°</button><button class="chip" data-angle="135" data-mode="beta" type="button">β 135°</button></div>
+<label for="beta">V 字夾角 β（度）</label><div aria-label="角度快捷" class="quickAngles"><button class="chip" data-angle="30" data-mode="beta" type="button">β 30°</button><button class="chip" data-angle="45" data-mode="beta" type="button">β 45°</button><button class="chip" data-angle="60" data-mode="beta" type="button">β 60°</button><button class="chip" data-angle="90" data-mode="beta" type="button">β 90°</button><button class="chip" data-angle="120" data-mode="beta" type="button">β 120°</button><button class="chip" data-angle="150" data-mode="beta" type="button">β 150°</button></div>
 <div class="row angleRow">
   <div class="angleInput">
     <div class="numStepper">
@@ -506,7 +499,7 @@
 </div>
 </div>
 <div class="sliderWrap" id="phiBox" style="display:none;">
-<label for="phi">單側仰角 φ（度，相對水平）</label><div aria-label="角度快捷" class="quickAngles"><button class="chip" data-angle="10" data-mode="phi" type="button">φ 10°</button><button class="chip" data-angle="15" data-mode="phi" type="button">φ 15°</button><button class="chip" data-angle="20" data-mode="phi" type="button">φ 20°</button><button class="chip" data-angle="30" data-mode="phi" type="button">φ 30°</button><button class="chip" data-angle="45" data-mode="phi" type="button">φ 45°</button><button class="chip" data-angle="60" data-mode="phi" type="button">φ 60°</button></div>
+<label for="phi">單側仰角 φ（度，相對水平）</label><div aria-label="角度快捷" class="quickAngles"><button class="chip" data-angle="15" data-mode="phi" type="button">φ 15°</button><button class="chip" data-angle="20" data-mode="phi" type="button">φ 20°</button><button class="chip" data-angle="30" data-mode="phi" type="button">φ 30°</button><button class="chip" data-angle="45" data-mode="phi" type="button">φ 45°</button><button class="chip" data-angle="60" data-mode="phi" type="button">φ 60°</button><button class="chip" data-angle="75" data-mode="phi" type="button">φ 75°</button></div>
 <div class="row angleRow">
   <div class="angleInput">
     <div class="numStepper">
@@ -852,20 +845,8 @@ function setMode(mode){
   [w, unit, beta, phi].forEach(x=>{
     x.addEventListener('input', ()=>{ compute(); });
   });
-});
-  });
 
-  copyBtn.addEventListener('click', copyText);
-
-  // Quick angle chips
-  document.querySelectorAll('.chip').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const mode = btn.getAttribute('data-mode');
-      const val = parseFloat(btn.getAttribute('data-angle'));
-      if(!isFinite(val)) return;
-      applyQuickAngle(mode, val);
-    });
-  });
+copyBtn.addEventListener('click', copyText);
 
   // 計算（保留即時計算，但給「手感」按鍵）
   calcBtn.addEventListener('click', ()=>{
@@ -877,6 +858,16 @@ function setMode(mode){
   });
 
   resetBtn.addEventListener('click', resetAll);
+
+
+  // 收合按鈕（與摩擦力工具一致）
+  document.querySelectorAll('.collapseBtn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const sel = btn.getAttribute('data-collapse');
+      const d = sel ? document.querySelector(sel) : null;
+      if(d && d.tagName.toLowerCase()==='details'){ d.open = false; }
+    });
+  });
 
   compute();
   setActiveChip('beta', parseFloat(beta.value));
