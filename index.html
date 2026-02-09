@@ -1,10 +1,11 @@
 <!DOCTYPE html>
+
 <html lang="zh-Hant-TW">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>戰繩｜軌道繩張力估算</title>
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>戰繩｜軌道繩張力估算</title>
+<style>
     :root{
       --bg:#070a0f;
       --card:#0f1623;
@@ -32,7 +33,7 @@
       color:var(--text);
     }
     .wrap{
-      max-width: 860px;
+      max-width: 980px;
       margin: 18px auto 80px;
       padding: 0 16px;
     }
@@ -71,12 +72,12 @@
       letter-spacing: .6px;
       line-height: 1.08;
       /* Smaller so it won't wrap like friction header */
-      font-size: clamp(22px, 4.2vw, 34px);
+      font-size: clamp(26px, 5.0vw, 38px);
       white-space: nowrap;
     }
     .heroSub{
       margin: 10px 0 0;
-      font-size: clamp(12px, 2.6vw, 16px);
+      font-size: clamp(14px, 2.9vw, 18px);
       color: rgba(232,238,247,.62);
       letter-spacing: .4px;
       white-space: nowrap;
@@ -98,7 +99,6 @@
   display:flex;
   align-items:center;
   justify-content:flex-end;
-  padding-left: 4px;
   border: none;
   background: transparent;
   overflow: visible;
@@ -106,44 +106,27 @@
   justify-self: end;
 }
 .logoBox img{
-  height: 56px; /* base */
+  height: 52px; /* bigger logo */
   width: auto;
+  opacity: .95; /* slightly lighter */
+  filter: brightness(1.12);
   display:block;
-  /* make it feel like a watermark (less harsh than pure white) */
-  opacity: .62;
-  filter: brightness(.84) contrast(.92) saturate(.9);
-  /* subtle glow, keep consistent with series */
-  -webkit-filter: brightness(.84) contrast(.92) saturate(.9) drop-shadow(0 0 6px rgba(212,175,55,.10)) drop-shadow(0 0 10px rgba(122,167,255,.10));
-          filter: brightness(.84) contrast(.92) saturate(.9) drop-shadow(0 0 6px rgba(212,175,55,.10)) drop-shadow(0 0 10px rgba(122,167,255,.10));
 }
 
-    
-    /* Platform tuning: iOS vs Android sizing */
-    @supports (-webkit-touch-callout: none){
-      /* iOS Safari: keep logo slightly smaller to avoid crowding */
-      .logoBox img{height: 52px;}
-    }
-    @supports not (-webkit-touch-callout: none){
-      /* Android/others: give logo a bit more presence */
-      @media (max-width: 520px) and (pointer: coarse){
-        .logoBox img{height: 62px;}
-      }
-    }
-
-@media (max-width: 420px){
+    @media (max-width: 420px){
       .hero{padding: 18px 16px 14px;}
       .heroGrid{gap: 10px;}
-      .heroTitle{font-size: 24px;}
-      .heroSub{font-size: 13px;}
-      .logoBox img{height: 52px;}
+      .heroTitle{font-size: 26px;}
+      .heroSub{font-size: 14px;}
+      .logoBox img{height: 46px;}
     }
 
     @media (max-width: 380px){
       .hero{padding: 18px 16px 14px;}
       .heroGrid{gap: 10px;}
-      .heroTitle{font-size: 22px; letter-spacing: .3px;}
-      .heroSub{font-size: 12px; letter-spacing: .2px;}
-      .logoBox img{height: 50px;}
+      .heroTitle{font-size: 24px; letter-spacing: .3px;}
+      .heroSub{font-size: 13px; letter-spacing: .2px;}
+      .logoBox img{height: 44px;}
     }
 
     /* ====== Cards ====== */
@@ -160,7 +143,6 @@
     @media (max-width: 520px){
       .cardHead{flex-wrap:wrap; align-items:flex-start;}
       .pill{margin-top: 10px;}
-      .cardTitle{font-size:18px;}
     }
 
     .card{
@@ -200,9 +182,6 @@
       background: rgba(122,167,255,.10);
       white-space: nowrap;
       margin-top: 2px;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
     .cardBody{padding:16px}
 
@@ -326,35 +305,11 @@
       padding: 0 2px;
     }
 
-    
-    
-    .qbar{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin: 10px 0 2px;
-    }
-    .qbtn{
-      cursor:pointer;
-      user-select:none;
-      border:1px solid rgba(27,41,64,.95);
-      background: rgba(255,255,255,.02);
-      color: rgba(232,238,247,.88);
-      padding:9px 10px;
-      border-radius: 999px;
-      font-size:13px;
-      line-height:1;
-    }
-    .qbtn:active{transform: translateY(1px)}
     .twoBtns{
       display:flex;
       gap:12px;
       flex-wrap:wrap;
       margin-top: 12px;
-    }
-    .twoBtns .btn{
-      flex: 1 1 160px;
-      justify-content:center;
     }
 
     .toast{
@@ -376,196 +331,210 @@
       opacity:1;
       transform: translateX(-50%) translateY(-4px);
     }
+  
+    /* ===== Quick angle chips ===== */
+    .quickAngles{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin: 10px 0 8px;
+    }
+    .chip{
+      appearance:none;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.02);
+      color: rgba(232,238,247,.9);
+      padding:10px 12px;
+      border-radius: 999px;
+      font-size:14px;
+      cursor:pointer;
+    }
+    .chip:active{transform: translateY(1px);}
+    .chip.active{
+      border-color: rgba(122,167,255,.55);
+      background: rgba(122,167,255,.12);
+    }
+
+    /* ===== Collapsible info cards ===== */
+    details.card{overflow:hidden;}
+    details.card > summary{
+      list-style:none;
+      cursor:pointer;
+    }
+    details.card > summary::-webkit-details-marker{display:none;}
+    .summaryHead{
+      align-items:center;
+    }
+    .summaryHead::after{
+      content:"›";
+      margin-left:auto;
+      font-size:22px;
+      color: rgba(232,238,247,.55);
+      transform: rotate(90deg);
+      transition: transform .15s ease;
+      padding-left: 12px;
+    }
+    details[open] > summary.summaryHead::after{
+      transform: rotate(-90deg);
+    }
+
   </style>
 </head>
-
 <body>
-  <div class="wrap">
-
-    <section class="hero">
-      <div class="heroGrid">
-        <div class="heroLeft">
-          <h1 class="heroTitle">軌道繩張力估算</h1>
-          <div class="heroLine" aria-hidden="true"></div>
-          
-          <p class="heroSub">散木團隊｜教學與判斷輔助工具</p>
-        </div>
-
-        <div class="logoBox" title="散木LOGO">
-          <img src="sunmoon_logo.png" alt="散木LOGO" onerror="this.style.display='none';" />
-        </div>
-      </div>
-    </section>
-
-    <div class="grid">
-      <!-- Input Card -->
-      <section class="card">
-        <div class="cardHead">
-          <div style="min-width:0">
-            <h2 class="cardTitle">參數輸入</h2>
-            <p class="sub">支援兩種角度表示：V 字夾角 β 或單側仰角 φ（相對水平）。</p>
-          </div>
-          <div class="pill" id="modeLabel">模式：對稱 V 角（兩固定點）</div>
-        </div>
-
-        <div class="cardBody">
-          <div class="row">
-            <div>
-              <label for="w">總重量 W（kg）</label>
-              <input id="w" type="number" min="0" step="0.1" value="120" />
-              <div class="hint">包含：傷患 + 擔架 + 協助手 + 裝備（只要掛在系統上的都算進來）。</div>
-            </div>
-
-            <div>
-              <label for="unit">輸出單位</label>
-              <select id="unit">
-                <option value="kgf">kgf（工程直覺）</option>
-                <option value="N">N（標準力單位，W×9.81）</option>
-              </select>
-              <div class="hint">現場若都講「公斤」比較快，就用 kgf；要更標準就切到 N。</div>
-            </div>
-          </div>
-
-          <div class="switch">
-            <div class="btn primary" id="btnBeta">角度用 β（V 字夾角）</div>
-            <div class="btn" id="btnPhi">角度用 φ（單側仰角）</div>
-          </div>
-
-          <div id="betaBox" class="sliderWrap">
-            <label for="beta">V 字夾角 β（度）</label>
-            <div class="qbar" aria-label="常用β角度">
-              <div class="qbtn" data-set-beta="60">β 60°</div>
-              <div class="qbtn" data-set-beta="90">β 90°</div>
-              <div class="qbtn" data-set-beta="120">β 120°</div>
-              <div class="qbtn" data-set-beta="150">β 150°</div>
-            </div>
-            <div class="row">
-              <div>
-                <input id="beta" type="number" min="1" max="179" step="1" value="120" />
-                <div class="hint">β 越大 → 繩越「水平」 → 張力越爆衝。</div>
-              </div>
-              <div>
-                <input id="betaRange" type="range" min="10" max="170" step="1" value="120" />
-                <div class="hint mono">快速拖拉調角度</div>
-              </div>
-            </div>
-          </div>
-
-          <div id="phiBox" class="sliderWrap" style="disp<label for="unit">輸出單位</label>
-              <div class="btn primary" id="unitToggle" style="width:100%; justify-content:space-between;" role="button" aria-label="切換輸出單位">
-                <span>輸出單位</span><span class="mono" id="unitToggleText">kgf</span>
-              </div>
-              <select id="unit" style="display:none;">
-                <option value="kgf">kgf（工程直覺）</option>
-                <option value="N">N（標準力單位，W×9.81）</option>
-              </select>
-              <div class="hint">點一下切換：kgf ↔ N（W×9.81）。</div>9" step="1" value="30" />
-                <div class="hint">φ 越小 → 越水平 → 張力越大。</div>
-              </div>
-              <div>
-                <input id="phiRange" type="range" min="5" max="85" step="1" value="30" />
-                <div class="hint mono">快速拖拉調角度</div>
-              </div>
-            </div>
-          </div>
-
-          <footer>
+<div class="wrap">
+<section class="hero">
+<div class="heroGrid">
+<div class="heroLeft">
+<h1 class="heroTitle">軌道繩張力估算</h1>
+<div aria-hidden="true" class="heroLine"></div>
+<p class="heroSub">散木團隊｜教學與判斷輔助工具</p>
+</div>
+<div class="logoBox" title="散木LOGO">
+<img alt="散木LOGO" onerror="this.style.display='none';" src="sunmoon_logo.png"/>
+</div>
+</div>
+</section>
+<div class="grid">
+<!-- Input Card -->
+<section class="card">
+<div class="cardHead">
+<div style="min-width:0">
+<h2 class="cardTitle">參數輸入</h2>
+<p class="sub">支援兩種角度表示：V 字夾角 β 或單側仰角 φ（相對水平）。</p>
+</div>
+<div class="pill" id="modeLabel">模式：對稱 V 角（兩固定點）</div>
+</div>
+<div class="cardBody">
+<div class="row">
+<div>
+<label for="w">總重量 W（kg）</label>
+<input id="w" min="0" step="0.1" type="number" value="120"/>
+<div class="hint">包含：傷患 + 擔架 + 協助手 + 裝備（只要掛在系統上的都算進來）。</div>
+</div>
+<div>
+<label for="unit">輸出單位</label>
+<select id="unit">
+<option value="kgf">kgf（工程直覺）</option>
+<option value="N">N（標準力單位，W×9.81）</option>
+</select>
+<div class="hint">現場若都講「公斤」比較快，就用 kgf；要更標準就切到 N。</div>
+</div>
+</div>
+<div class="switch">
+<div class="btn primary" id="btnBeta">角度用 β（V 字夾角）</div>
+<div class="btn" id="btnPhi">角度用 φ（單側仰角）</div>
+</div>
+<div class="sliderWrap" id="betaBox">
+<label for="beta">V 字夾角 β（度）</label><div aria-label="角度快捷" class="quickAngles"><button class="chip" data-angle="60" data-mode="beta" type="button">β 60°</button><button class="chip" data-angle="90" data-mode="beta" type="button">β 90°</button><button class="chip" data-angle="120" data-mode="beta" type="button">β 120°</button><button class="chip" data-angle="150" data-mode="beta" type="button">β 150°</button></div>
+<div class="row">
+<div>
+<input id="beta" max="179" min="1" step="1" type="number" value="120"/>
+<div class="hint">β 越大 → 繩越「水平」 → 張力越爆衝。</div>
+</div>
+<div>
+<input id="betaRange" max="170" min="10" step="1" type="range" value="120"/>
+<div class="hint mono">快速拖拉調角度</div>
+</div>
+</div>
+</div>
+<div class="sliderWrap" id="phiBox" style="display:none;">
+<label for="phi">單側仰角 φ（度，相對水平）</label><div aria-label="角度快捷" class="quickAngles"><button class="chip" data-angle="15" data-mode="phi" type="button">φ 15°</button><button class="chip" data-angle="20" data-mode="phi" type="button">φ 20°</button><button class="chip" data-angle="30" data-mode="phi" type="button">φ 30°</button><button class="chip" data-angle="45" data-mode="phi" type="button">φ 45°</button></div>
+<div class="row">
+<div>
+<input id="phi" max="89" min="1" step="1" type="number" value="30"/>
+<div class="hint">φ 越小 → 越水平 → 張力越大。</div>
+</div>
+<div>
+<input id="phiRange" max="85" min="5" step="1" type="range" value="30"/>
+<div class="hint mono">快速拖拉調角度</div>
+</div>
+</div>
+</div>
+<div class="twoBtns"><div class="btn primary" id="calcBtn">計算</div><div class="btn" id="resetBtn">重設</div></div>
+<footer>
             計算模型假設：對稱 V 角、受力點在中間、兩側張力相同。若是「受力點偏一側」的不對稱狀況，需要再加入角度參數。
           </footer>
-          <div class="twoBtns">
-            <div class="btn" id="copyBtn">複製結果</div>
-            <div class="btn" id="resetBtn">重設</div>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- Result Card -->
-      <section class="card">
-        <div class="cardHead">
-          <div style="min-width:0">
-            <h2 class="cardTitle">計算結果</h2>
-            <p class="sub">顯示每側繩段張力 T、每固定點拉力、張力倍率（T/W）、危險提示。</p>
-          </div>
-        </div>
-
-        <div class="cardBody">
-          <div class="kpi">
-            <div class="k">
-              <div class="name">
-                <span>每側張力 T</span>
-                <span class="mono" id="unitT">kgf</span>
-              </div>
-              <p class="val mono" id="T">—</p>
-              <small>兩側相同（對稱假設）</small>
-            </div>
-
-            <div class="k">
-              <div class="name">
-                <span>每固定點拉力</span>
-                <span class="mono" id="unitA">kgf</span>
-              </div>
-              <p class="val mono" id="A">—</p>
-              <small>通常≈T（方向沿繩）</small>
-            </div>
-
-            <div class="k">
-              <div class="name">
-                <span>張力倍率</span>
-                <span class="mono">T/W</span>
-              </div>
-              <p class="val mono" id="ratio">—</p>
-              <small>倍率越高越危險</small>
-            </div>
-
-            <div class="k">
-              <div class="name">
-                <span>等效角度</span>
-                <span class="mono">β ↔ φ</span>
-              </div>
-              <p class="val mono" id="eqAngle">—</p>
-            </div>
-          </div>
-
-          <div class="status" id="statusBox">
-            <div class="lamp" id="lamp"></div>
-            <div class="txt" id="statusText">
-              <strong>—</strong><br/>—</div>
-          </div>
-
-          <div class="hint" style="margin-top:12px;">
+</div>
+</section>
+<!-- Result Card -->
+<section class="card" id="resultCard">
+<div class="cardHead">
+<div style="min-width:0">
+<h2 class="cardTitle">計算結果</h2>
+<p class="sub">顯示每側繩段張力 T、每固定點拉力、張力倍率（T/W）、危險提示。</p>
+</div>
+</div>
+<div class="cardBody">
+<div class="kpi">
+<div class="k">
+<div class="name">
+<span>每側張力 T</span>
+<span class="mono" id="unitT">kgf</span>
+</div>
+<p class="val mono" id="T">—</p>
+<small>兩側相同（對稱假設）</small>
+</div>
+<div class="k">
+<div class="name">
+<span>每固定點拉力</span>
+<span class="mono" id="unitA">kgf</span>
+</div>
+<p class="val mono" id="A">—</p>
+<small>通常≈T（方向沿繩）</small>
+</div>
+<div class="k">
+<div class="name">
+<span>張力倍率</span>
+<span class="mono">T/W</span>
+</div>
+<p class="val mono" id="ratio">—</p>
+<small>倍率越高越危險</small>
+</div>
+<div class="k">
+<div class="name">
+<span>等效角度</span>
+<span class="mono">β ↔ φ</span>
+</div>
+<p class="val mono" id="eqAngle">—</p>
+</div>
+</div>
+<div class="status" id="statusBox">
+<div class="lamp" id="lamp"></div>
+<div class="txt" id="statusText">
+<strong>—</strong><br/>—</div>
+</div>
+<div class="hint" style="margin-top:12px;">
             注意：<span class="mono">繩越水平，張力越爆。</span>
-          </div>
-        </div>
-      </section>
-    </div>
-  </div>
-
-    <details id="infoC" style="margin-top:12px">
-      <summary>開發與版本資訊</summary>
-      <div class="hint" style="margin-top:10px;">
-        本工具由 <b>散木團隊</b> 開發製作<br>
-        教學架構與工程判斷／徐世豐<br>
-        工具設計與互動介面／吳佩芳（朵朵）<br>
-        AI 協作輔助／ChatGPT<br><br>
-        版本 v1.0.7｜2026
-      </div>
-    </details>
-
-    <div style="margin-top:14px; color:var(--muted); font-size:14px; line-height:1.6;">
-      【教學使用聲明】本工具為教學與風險判斷輔助使用，
-      所有結果皆為估算值，不得取代現場判斷、標準作業程序（SOP）與安全保護措施。
-    </div>
-
-  <div class="toast" id="toast">已複製到剪貼簿</div>
-
+</div>
+<div class="twoBtns" style="margin-top:14px;"><div class="btn primary" id="copyBtn">複製結果</div></div></div>
+</section>
+</div><div class="grid" style="grid-template-columns:1fr; margin-top:16px;"><details class="card details" id="a2hs"><summary class="cardHead summaryHead"><h2 class="cardTitle">加入主畫面教學</h2></summary><div class="cardBody">
+<p class="sub" style="margin-top:0;">把這個工具加到手機主畫面，就像 App 一樣一鍵打開。</p>
+<div class="hint">
+<strong>iPhone（Safari）</strong><br/>
+1. 右下角「分享」<br/>
+2. 往下滑找到「加入主畫面」<br/>
+3. 名稱可改成「軌道繩張力估算」→ 點「加入」<br/><br/>
+<strong>Android（Chrome）</strong><br/>
+1. 右上角「︙」選單<br/>
+2. 選「加入主畫面」或「安裝應用程式」<br/>
+3. 依提示完成即可
+</div>
+</div></details><details class="card details" id="devinfo"><summary class="cardHead summaryHead"><h2 class="cardTitle">開發與版本資訊</h2></summary><div class="cardBody">
+<div class="hint" style="margin-top:0;">
+<strong>開發</strong>：散木團隊（戰繩工具系）<br/>
+<strong>工具</strong>：軌道繩張力估算<br/>
+<strong>版本</strong>：v1.1.0<br/>
+<strong>更新重點</strong>：角度快捷鍵、單一滑桿顯示、計算/重設按鈕、複製結果移至結果區、資訊區塊收合。
+</div>
+</div></details></div>
+</div>
+<div class="toast" id="toast">已複製到剪貼簿</div>
 <script>
   const el = (id)=>document.getElementById(id);
 
   const w = el('w');
   const unit = el('unit');
-  const unitToggle = el('unitToggle');
-  const unitToggleText = el('unitToggleText');
 
   const btnBeta = el('btnBeta');
   const btnPhi  = el('btnPhi');
@@ -591,6 +560,7 @@
   const statusText = el('statusText');
 
   const copyBtn = el('copyBtn');
+  const calcBtn = el('calcBtn');
   const resetBtn = el('resetBtn');
   const toast = el('toast');
 
@@ -650,7 +620,6 @@
 
     unitT.textContent = unitLabel();
     unitA.textContent = unitLabel();
-    if(unitToggleText) unitToggleText.textContent = unitLabel();
 
     T_out.textContent = r2(T_display).toLocaleString('en-US');
     A_out.textContent = r2(T_display).toLocaleString('en-US');
@@ -720,7 +689,30 @@
     hiddenText = "";
   }
 
-  function setMode(mode){
+  
+  function setActiveChip(mode, val){
+    document.querySelectorAll('.chip').forEach(c=>{
+      const m = c.getAttribute('data-mode');
+      const a = parseFloat(c.getAttribute('data-angle'));
+      c.classList.toggle('active', m === mode && a === val);
+    });
+  }
+
+  function applyQuickAngle(mode, val){
+    if(mode === 'beta'){
+      setMode('beta');
+      beta.value = val;
+      betaRange.value = val;
+    }else{
+      setMode('phi');
+      phi.value = val;
+      phiRange.value = val;
+    }
+    setActiveChip(mode, val);
+    // compute() 已在 setMode() 內觸發
+  }
+
+function setMode(mode){
     angleMode = mode;
     if(mode === 'beta'){
       btnBeta.classList.add('primary');
@@ -788,36 +780,30 @@
   });
 
   copyBtn.addEventListener('click', copyText);
+
+  // Quick angle chips
+  document.querySelectorAll('.chip').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const mode = btn.getAttribute('data-mode');
+      const val = parseFloat(btn.getAttribute('data-angle'));
+      if(!isFinite(val)) return;
+      applyQuickAngle(mode, val);
+    });
+  });
+
+  // 計算（保留即時計算，但給「手感」按鍵）
+  calcBtn.addEventListener('click', ()=>{
+    compute();
+    // 捲到結果區
+    const rc = document.getElementById('resultCard');
+    if(rc) rc.scrollIntoView({behavior:'smooth', block:'start'});
+    showToast('已計算');
+  });
+
   resetBtn.addEventListener('click', resetAll);
 
-  if(unitToggle){
-    unitToggle.addEventListener('click', ()=>{
-      unit.value = (unit.value === 'kgf') ? 'N' : 'kgf';
-      compute();
-    });
-  }
-
-  // 常用角度快捷鍵
-  document.querySelectorAll('[data-set-beta]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const v = parseFloat(btn.getAttribute('data-set-beta'));
-      beta.value = v;
-      betaRange.value = v;
-      if(angleMode !== 'beta') setMode('beta');
-      else compute();
-    });
-  });
-  document.querySelectorAll('[data-set-phi]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const v = parseFloat(btn.getAttribute('data-set-phi'));
-      phi.value = v;
-      phiRange.value = v;
-      if(angleMode !== 'phi') setMode('phi');
-      else compute();
-    });
-  });
-
   compute();
+  setActiveChip('beta', parseFloat(beta.value));
 </script>
 </body>
 </html>
