@@ -3,282 +3,360 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>戰繩｜軌道繩張力估算</title>
+  <title>軌道繩張力估算｜散木團隊</title>
   <style>
     :root{
-      --bg:#0b0f14;
-      --card:#111826;
-      --text:#e8eef7;
-      --muted:#a8b3c5;
-      --line:#1b2940;
+      --bg0:#06080d;
+      --bg1:#0b1220;
+      --bg2:#070a12;
+
+      --card: rgba(255,255,255,.035);
+      --card2: rgba(255,255,255,.02);
+      --line: rgba(120,150,210,.22);
+      --line2: rgba(255,255,255,.06);
+
+      --text:#eaf1ff;
+      --muted: rgba(234,241,255,.68);
 
       --good:#2bd576;
       --warn:#ffd166;
       --bad:#ff5c5c;
 
-      --accent:#7aa7ff;
-      --gold: rgba(212, 175, 55, .55); /* 低調金線 */
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-      --radius: 18px;
+      --gold: rgba(212,175,55,.55);
+      --shadow: 0 12px 40px rgba(0,0,0,.45);
+      --radius: 20px;
     }
-    *{box-sizing:border-box}
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
-      background: radial-gradient(1200px 800px at 20% -10%, rgba(122,167,255,.18), transparent 55%),
-                  radial-gradient(900px 700px at 110% 10%, rgba(43,213,118,.14), transparent 55%),
-                  var(--bg);
-      color:var(--text);
-    }
-    .wrap{
-      max-width: 980px;
-      margin: 24px auto 80px;
-      padding: 0 16px;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 800px at 10% -10%, rgba(96,160,255,.18), transparent 55%),
+        radial-gradient(900px 700px at 110% 15%, rgba(52,220,170,.10), transparent 58%),
+        radial-gradient(700px 700px at 50% 120%, rgba(255,215,120,.06), transparent 55%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      background-attachment: fixed;
     }
 
-    /* ====== 新版同系列標題區 ====== */
-    .hero{
-      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
-      border: 1px solid var(--line);
-      border-radius: 28px;
-      box-shadow: var(--shadow);
-      padding: 22px 22px 18px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:18px;
-      overflow:hidden;
-      position:relative;
+    /* subtle grain */
+    body:before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:.08;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+      mix-blend-mode: overlay;
     }
-    .hero::before{
+
+    .wrap{
+      max-width: 980px;
+      margin: 20px auto 70px;
+      padding: 0 14px;
+    }
+
+    /* ===== Header like friction tool ===== */
+    .hero{
+      position:relative;
+      border-radius: 28px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      padding: 18px 18px 16px;
+    }
+    .hero::after{
       content:"";
       position:absolute;
-      inset:-2px;
-      background: radial-gradient(900px 500px at 18% 0%, rgba(122,167,255,.10), transparent 60%),
-                  radial-gradient(700px 450px at 110% 10%, rgba(43,213,118,.08), transparent 60%);
+      inset:0;
       pointer-events:none;
+      background:
+        radial-gradient(900px 420px at 18% 0%, rgba(96,160,255,.12), transparent 60%),
+        radial-gradient(700px 380px at 110% 20%, rgba(52,220,170,.08), transparent 62%);
+      opacity:.85;
     }
-    .heroLeft{
+
+    .heroRow{
       position:relative;
       z-index:1;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      min-width: 0;
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items:center;
     }
+
     .heroTitle{
       margin:0;
-      font-size: 34px;
+      font-weight: 900;
       letter-spacing: .8px;
-      line-height: 1.12;
-      font-weight: 800;
-      white-space: nowrap;
+      font-size: clamp(26px, 5.6vw, 40px); /* mobile friendly */
+      line-height: 1.08;
     }
+
+    .goldLine{
+      height: 2px;
+      width: min(320px, 70%);
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      border-radius: 999px;
+      margin: 12px 0 10px;
+      opacity: .95;
+    }
+
     .heroSub{
       margin:0;
-      font-size: 18px;
-      color: rgba(232,238,247,.65);
+      font-size: clamp(14px, 3.3vw, 18px);
+      color: var(--muted);
       letter-spacing: .6px;
-      white-space: nowrap;
     }
-    .heroMidLine{
-      position:relative;
-      z-index:1;
-      height: 2px;
-      width: 160px;
-      background: linear-gradient(90deg, transparent, var(--gold), transparent);
-      opacity: .9;
-      border-radius: 999px;
-      flex: 0 0 auto;
-    }
-    .heroRight{
-      position:relative;
-      z-index:1;
-      display:flex;
-      align-items:center;
-      gap:12px;
-      flex: 0 0 auto;
-    }
+
     .logoBox{
-      width: 120px;
-      height: 64px;
+      width: clamp(96px, 22vw, 140px);
+      height: clamp(52px, 12vw, 72px);
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.02);
       display:flex;
       align-items:center;
       justify-content:center;
-      border-radius: 14px;
-      border: 1px solid rgba(27,41,64,.9);
-      background: rgba(255,255,255,.02);
       overflow:hidden;
     }
     .logoBox img{
       max-width: 92%;
       max-height: 92%;
-      opacity: .88;
+      opacity: .9;
       display:block;
     }
+    .logoFallback{
+      font-size: 12px;
+      color: rgba(234,241,255,.45);
+      letter-spacing:.4px;
+    }
 
-    /* ====== 卡片通用 ====== */
+    /* ===== Layout: mobile first (single column) ===== */
     .grid{
       display:grid;
-      grid-template-columns: 1.2fr .8fr;
-      gap:16px;
-      margin-top: 16px;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 14px;
     }
-    @media (max-width: 860px){
-      .grid{grid-template-columns: 1fr}
-      .hero{
-        flex-direction:column;
-        align-items:flex-start;
-        gap:14px;
-      }
-      .heroMidLine{width: 100%;}
-      .heroTitle, .heroSub{white-space: normal;}
-      .heroRight{align-self:flex-end;}
+    @media (min-width: 900px){
+      .grid{ grid-template-columns: 1.15fr .85fr; gap: 16px; }
     }
+
     .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
-      border: 1px solid var(--line);
       border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, var(--card), var(--card2));
       box-shadow: var(--shadow);
       overflow:hidden;
     }
+
     .cardHead{
-      padding:16px 16px 12px;
-      border-bottom:1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,.02), transparent);
+      padding: 14px 14px 12px;
+      border-bottom: 1px solid rgba(120,150,210,.18);
+      background: linear-gradient(180deg, rgba(255,255,255,.03), transparent);
       display:flex;
       align-items:flex-start;
       justify-content:space-between;
-      gap:10px;
+      gap: 10px;
     }
-    .cardHeadLeft{min-width:0}
+
+    .cardTitleRow{
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      flex-wrap:wrap;
+    }
+
     .cardTitle{
-      font-size:14px;
-      margin:0 0 6px;
-      display:flex; gap:10px; align-items:center;
+      margin:0;
+      font-size: 16px;
+      letter-spacing:.3px;
+      font-weight: 800;
     }
+
     .tag{
-      font-size:11px;
-      padding:3px 8px;
-      border:1px solid var(--line);
+      font-size: 12px;
+      padding: 6px 10px;
       border-radius: 999px;
-      color:var(--muted);
-      background: rgba(255,255,255,.02);
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      color: rgba(234,241,255,.70);
       white-space:nowrap;
     }
-    .sub{font-size:12px; color:var(--muted); margin:0; line-height:1.5}
-    .cardBody{padding:16px}
+    .tag.mode{
+      border-color: rgba(96,160,255,.35);
+      background: rgba(96,160,255,.10);
+      color: rgba(234,241,255,.82);
+    }
+
+    .sub{
+      margin: 6px 0 0;
+      font-size: 13px;
+      color: rgba(234,241,255,.62);
+      line-height:1.55;
+    }
+
+    .cardBody{ padding: 14px; }
+
+    label{
+      display:block;
+      font-size: 13px;
+      color: rgba(234,241,255,.72);
+      margin-bottom: 7px;
+      letter-spacing:.2px;
+    }
+
+    input, select{
+      width:100%;
+      padding: 14px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(96,160,255,.22);
+      background: rgba(7,10,18,.55);
+      color: var(--text);
+      outline:none;
+      font-size: 16px; /* prevent iOS zoom */
+    }
+    input:focus, select:focus{ border-color: rgba(96,160,255,.55); }
 
     .row{
       display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
+      grid-template-columns: 1fr;
+      gap: 12px;
     }
-    @media (max-width:560px){
-      .row{grid-template-columns:1fr}
+    @media (min-width: 560px){
+      .row{ grid-template-columns: 1fr 1fr; }
     }
-    label{
-      display:block;
-      font-size:12px;
-      color:var(--muted);
-      margin-bottom: 6px;
-    }
-    input, select{
-      width:100%;
-      padding:12px 12px;
-      border-radius: 12px;
-      border:1px solid var(--line);
-      background: rgba(10,15,20,.55);
-      color:var(--text);
-      outline:none;
-    }
-    input:focus, select:focus{border-color: rgba(122,167,255,.65)}
+
     .hint{
-      font-size:12px;
-      color:var(--muted);
+      font-size: 13px;
+      color: rgba(234,241,255,.60);
       margin-top: 10px;
-      line-height: 1.5;
+      line-height:1.6;
     }
+
     .switch{
-      display:flex; gap:8px; flex-wrap:wrap;
-      margin: 10px 0 12px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin: 12px 0 12px;
     }
+
     .btn{
       cursor:pointer;
       user-select:none;
-      border:1px solid var(--line);
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.02);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius: 12px;
-      font-size:12px;
+      color: rgba(234,241,255,.92);
+      font-size: 14px;
+      letter-spacing:.2px;
       display:inline-flex;
-      gap:8px; align-items:center;
+      align-items:center;
+      gap:8px;
     }
     .btn.primary{
-      border-color: rgba(122,167,255,.55);
-      background: rgba(122,167,255,.12);
+      border-color: rgba(96,160,255,.55);
+      background: rgba(96,160,255,.14);
     }
-    .btn:active{transform: translateY(1px)}
+    .btn:active{ transform: translateY(1px); }
+
     .sliderWrap{
-      padding:12px;
-      border-radius: 14px;
-      border:1px solid var(--line);
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.09);
       background: rgba(255,255,255,.015);
     }
-    input[type="range"]{padding:0; border:none; background:transparent}
-    .kpi{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
+    input[type="range"]{
+      padding:0;
+      border:none;
+      background:transparent;
+      width:100%;
     }
-    @media (max-width:560px){ .kpi{grid-template-columns:1fr} }
-    .k{
-      padding:14px;
-      border:1px solid var(--line);
-      border-radius: 14px;
-      background: rgba(255,255,255,.015);
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+    .twoBtns{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top: 12px;
     }
-    .k .name{
-      font-size:12px;
-      color:var(--muted);
-      margin-bottom: 8px;
-      display:flex; justify-content:space-between; gap:8px;
-    }
-    .k .val{
-      font-size:20px;
-      letter-spacing:.3px;
-      margin:0;
-    }
-    .k small{font-size:12px; color:var(--muted)}
-    .status{
-      margin-top:12px;
-      padding:12px 14px;
-      border-radius: 14px;
-      border:1px solid var(--line);
-      display:flex; gap:10px; align-items:flex-start;
-      background: rgba(255,255,255,.015);
-    }
-    .lamp{
-      width:10px; height:10px; border-radius: 999px; margin-top: 4px;
-      box-shadow: 0 0 0 6px rgba(255,255,255,.04);
-      background: var(--good);
-    }
-    .status .txt{line-height:1.5; font-size:12px; color:var(--muted)}
-    .status strong{color:var(--text); font-weight:600}
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;}
 
     footer{
-      margin-top: 14px;
-      color:var(--muted);
-      font-size:12px;
+      margin-top: 12px;
+      color: rgba(234,241,255,.55);
+      font-size: 13px;
       line-height:1.6;
       padding: 0 2px;
     }
-    .twoBtns{
-      display:flex; gap:10px; flex-wrap:wrap;
-      margin-top: 12px;
+
+    .kpi{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
     }
+    @media (min-width:560px){
+      .kpi{ grid-template-columns: 1fr 1fr; }
+    }
+
+    .k{
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.09);
+      background: rgba(255,255,255,.015);
+    }
+    .k .name{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      font-size: 13px;
+      color: rgba(234,241,255,.70);
+      margin-bottom: 10px;
+    }
+    .k .val{
+      margin:0;
+      font-size: 22px;
+      letter-spacing:.3px;
+      font-weight: 800;
+    }
+    .k small{
+      display:block;
+      margin-top: 6px;
+      font-size: 13px;
+      color: rgba(234,241,255,.55);
+      line-height:1.45;
+    }
+
+    .status{
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.09);
+      background: rgba(255,255,255,.015);
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+    }
+    .lamp{
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      margin-top: 6px;
+      box-shadow: 0 0 0 6px rgba(255,255,255,.04);
+      background: var(--good);
+      flex: 0 0 auto;
+    }
+    .status .txt{
+      font-size: 13px;
+      color: rgba(234,241,255,.62);
+      line-height:1.55;
+    }
+    .status strong{ color: rgba(234,241,255,.95); }
+
     .toast{
       position: fixed;
       left: 50%;
@@ -286,10 +364,10 @@
       bottom: 16px;
       padding: 10px 12px;
       border-radius: 999px;
-      border:1px solid var(--line);
-      background: rgba(17,24,38,.92);
-      color: var(--text);
-      font-size: 12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(10,15,25,.92);
+      color: rgba(234,241,255,.92);
+      font-size: 13px;
       opacity:0;
       pointer-events:none;
       transition: opacity .2s ease, transform .2s ease;
@@ -304,19 +382,17 @@
 <body>
   <div class="wrap">
 
-    <!-- 同系列標題區塊 -->
-    <section class="hero">
-      <div class="heroLeft">
-        <h1 class="heroTitle">軌道繩張力估算</h1>
-        <p class="heroSub">散木團隊｜教學與判斷輔助工具</p>
-      </div>
+    <section class="hero" aria-label="標題區塊">
+      <div class="heroRow">
+        <div>
+          <h1 class="heroTitle">軌道繩張力估算</h1>
+          <div class="goldLine" aria-hidden="true"></div>
+          <p class="heroSub">散木團隊｜教學與判斷輔助工具</p>
+        </div>
 
-      <div class="heroMidLine" aria-hidden="true"></div>
-
-      <div class="heroRight">
-        <div class="logoBox" title="散木LOGO（之後上傳 png）">
-          <!-- 佔位檔名：之後你上傳到 repo 根目錄即可顯示 -->
-          <img src="sunmoon-logo.png" alt="散木LOGO" onerror="this.style.display='none';" />
+        <div class="logoBox" title="散木LOGO（上傳 png 後自動顯示）">
+          <img src="sunmoon-logo.png" alt="散木LOGO" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+          <div class="logoFallback" style="display:none;">SUNMOON</div>
         </div>
       </div>
     </section>
@@ -325,24 +401,23 @@
       <!-- Input Card -->
       <section class="card">
         <div class="cardHead">
-          <div class="cardHeadLeft">
-            <div class="cardTitle">
-              參數輸入
+          <div style="min-width:0;">
+            <div class="cardTitleRow">
+              <h2 class="cardTitle">參數輸入</h2>
               <span class="tag">MVP</span>
               <span class="tag">即時計算</span>
             </div>
             <p class="sub">支援兩種角度表示：V 字夾角 β 或單側仰角 φ（相對水平）。</p>
           </div>
 
-          <!-- 模式移到這裡（不再放版頭右側） -->
-          <div class="tag" id="modeLabel">模式：對稱 V 角（兩固定點）</div>
+          <span class="tag mode" id="modeLabel">模式：對稱 V 角（兩固定點）</span>
         </div>
 
         <div class="cardBody">
           <div class="row">
             <div>
               <label for="w">總重量 W（kg）</label>
-              <input id="w" type="number" min="0" step="0.1" value="120" />
+              <input id="w" type="number" min="0" step="0.1" value="120" inputmode="decimal" />
               <div class="hint">包含：傷患 + 擔架 + 協助手 + 裝備（只要掛在系統上的都算進來）。</div>
             </div>
 
@@ -365,7 +440,7 @@
             <label for="beta">V 字夾角 β（度）</label>
             <div class="row">
               <div>
-                <input id="beta" type="number" min="1" max="179" step="1" value="120" />
+                <input id="beta" type="number" min="1" max="179" step="1" value="120" inputmode="numeric" />
                 <div class="hint">β 越大 → 繩越「水平」 → 張力越爆衝。</div>
               </div>
               <div>
@@ -379,7 +454,7 @@
             <label for="phi">單側仰角 φ（度，相對水平）</label>
             <div class="row">
               <div>
-                <input id="phi" type="number" min="1" max="89" step="1" value="30" />
+                <input id="phi" type="number" min="1" max="89" step="1" value="30" inputmode="numeric" />
                 <div class="hint">φ 越小 → 越水平 → 張力越大。</div>
               </div>
               <div>
@@ -403,9 +478,9 @@
       <!-- Result Card -->
       <section class="card">
         <div class="cardHead">
-          <div class="cardHeadLeft">
-            <div class="cardTitle">
-              計算結果
+          <div style="min-width:0;">
+            <div class="cardTitleRow">
+              <h2 class="cardTitle">計算結果</h2>
               <span class="tag">即時計算</span>
             </div>
             <p class="sub">顯示每側繩段張力 T、每固定點拉力、張力倍率（T/W）、危險提示。</p>
@@ -452,15 +527,12 @@
 
           <div class="status" id="statusBox">
             <div class="lamp" id="lamp"></div>
-            <div class="txt" id="statusText">
-              <strong>—</strong><br/>—</div>
+            <div class="txt" id="statusText"><strong>—</strong><br/>—</div>
           </div>
 
           <div class="hint" style="margin-top:12px;">
             注意：<span class="mono">繩越水平，張力越爆。</span>
           </div>
-
-          <!-- 原本畫面上的估算摘要已移除，但複製功能仍保留（JS 會用 hiddenText） -->
         </div>
       </section>
     </div>
@@ -533,7 +605,6 @@
     const W_kgf = Wkg;
 
     let betaDeg, phiDeg;
-
     let T_kgf;
 
     if(angleMode === 'beta'){
@@ -620,7 +691,6 @@
     }
     statusText.innerHTML = `<strong>${warn.title}</strong><br/>${warn.msg}`;
 
-    // hidden copy text (not shown in UI)
     const unitTxt = unitLabel();
     const angleTxt = `β=${r2(betaDeg)}° / φ=${r2(phiDeg)}°`;
     const Ttxt = `${r2(T_display)} ${unitTxt}`;
