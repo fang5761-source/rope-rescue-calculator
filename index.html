@@ -326,11 +326,35 @@
       padding: 0 2px;
     }
 
+    
+    
+    .qbar{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin: 10px 0 2px;
+    }
+    .qbtn{
+      cursor:pointer;
+      user-select:none;
+      border:1px solid rgba(27,41,64,.95);
+      background: rgba(255,255,255,.02);
+      color: rgba(232,238,247,.88);
+      padding:9px 10px;
+      border-radius: 999px;
+      font-size:13px;
+      line-height:1;
+    }
+    .qbtn:active{transform: translateY(1px)}
     .twoBtns{
       display:flex;
       gap:12px;
       flex-wrap:wrap;
       margin-top: 12px;
+    }
+    .twoBtns .btn{
+      flex: 1 1 160px;
+      justify-content:center;
     }
 
     .toast{
@@ -409,6 +433,12 @@
 
           <div id="betaBox" class="sliderWrap">
             <label for="beta">V 字夾角 β（度）</label>
+            <div class="qbar" aria-label="常用β角度">
+              <div class="qbtn" data-set-beta="60">β 60°</div>
+              <div class="qbtn" data-set-beta="90">β 90°</div>
+              <div class="qbtn" data-set-beta="120">β 120°</div>
+              <div class="qbtn" data-set-beta="150">β 150°</div>
+            </div>
             <div class="row">
               <div>
                 <input id="beta" type="number" min="1" max="179" step="1" value="120" />
@@ -421,11 +451,15 @@
             </div>
           </div>
 
-          <div id="phiBox" class="sliderWrap" style="display:none;">
-            <label for="phi">單側仰角 φ（度，相對水平）</label>
-            <div class="row">
-              <div>
-                <input id="phi" type="number" min="1" max="89" step="1" value="30" />
+          <div id="phiBox" class="sliderWrap" style="disp<label for="unit">輸出單位</label>
+              <div class="btn primary" id="unitToggle" style="width:100%; justify-content:space-between;" role="button" aria-label="切換輸出單位">
+                <span>輸出單位</span><span class="mono" id="unitToggleText">kgf</span>
+              </div>
+              <select id="unit" style="display:none;">
+                <option value="kgf">kgf（工程直覺）</option>
+                <option value="N">N（標準力單位，W×9.81）</option>
+              </select>
+              <div class="hint">點一下切換：kgf ↔ N（W×9.81）。</div>9" step="1" value="30" />
                 <div class="hint">φ 越小 → 越水平 → 張力越大。</div>
               </div>
               <div>
@@ -435,14 +469,14 @@
             </div>
           </div>
 
-          <div class="twoBtns">
-            <div class="btn" id="copyBtn">複製結果（純文字）</div>
-            <div class="btn" id="resetBtn">重設（回預設值）</div>
-          </div>
-
           <footer>
             計算模型假設：對稱 V 角、受力點在中間、兩側張力相同。若是「受力點偏一側」的不對稱狀況，需要再加入角度參數。
           </footer>
+          <div class="twoBtns">
+            <div class="btn" id="copyBtn">複製結果</div>
+            <div class="btn" id="resetBtn">重設</div>
+          </div>
+
         </div>
       </section>
 
@@ -507,6 +541,22 @@
     </div>
   </div>
 
+    <details id="infoC" style="margin-top:12px">
+      <summary>開發與版本資訊</summary>
+      <div class="hint" style="margin-top:10px;">
+        本工具由 <b>散木團隊</b> 開發製作<br>
+        教學架構與工程判斷／徐世豐<br>
+        工具設計與互動介面／吳佩芳（朵朵）<br>
+        AI 協作輔助／ChatGPT<br><br>
+        版本 v1.0.7｜2026
+      </div>
+    </details>
+
+    <div style="margin-top:14px; color:var(--muted); font-size:14px; line-height:1.6;">
+      【教學使用聲明】本工具為教學與風險判斷輔助使用，
+      所有結果皆為估算值，不得取代現場判斷、標準作業程序（SOP）與安全保護措施。
+    </div>
+
   <div class="toast" id="toast">已複製到剪貼簿</div>
 
 <script>
@@ -514,6 +564,8 @@
 
   const w = el('w');
   const unit = el('unit');
+  const unitToggle = el('unitToggle');
+  const unitToggleText = el('unitToggleText');
 
   const btnBeta = el('btnBeta');
   const btnPhi  = el('btnPhi');
@@ -598,6 +650,7 @@
 
     unitT.textContent = unitLabel();
     unitA.textContent = unitLabel();
+    if(unitToggleText) unitToggleText.textContent = unitLabel();
 
     T_out.textContent = r2(T_display).toLocaleString('en-US');
     A_out.textContent = r2(T_display).toLocaleString('en-US');
@@ -736,6 +789,33 @@
 
   copyBtn.addEventListener('click', copyText);
   resetBtn.addEventListener('click', resetAll);
+
+  if(unitToggle){
+    unitToggle.addEventListener('click', ()=>{
+      unit.value = (unit.value === 'kgf') ? 'N' : 'kgf';
+      compute();
+    });
+  }
+
+  // 常用角度快捷鍵
+  document.querySelectorAll('[data-set-beta]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const v = parseFloat(btn.getAttribute('data-set-beta'));
+      beta.value = v;
+      betaRange.value = v;
+      if(angleMode !== 'beta') setMode('beta');
+      else compute();
+    });
+  });
+  document.querySelectorAll('[data-set-phi]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const v = parseFloat(btn.getAttribute('data-set-phi'));
+      phi.value = v;
+      phiRange.value = v;
+      if(angleMode !== 'phi') setMode('phi');
+      else compute();
+    });
+  });
 
   compute();
 </script>
