@@ -3,19 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>戰繩｜軌道繩張力估算（樣本）</title>
+  <title>戰繩｜軌道繩張力估算</title>
   <style>
     :root{
       --bg:#0b0f14;
       --card:#111826;
-      --card2:#0f1623;
       --text:#e8eef7;
       --muted:#a8b3c5;
       --line:#1b2940;
+
       --good:#2bd576;
       --warn:#ffd166;
       --bad:#ff5c5c;
+
       --accent:#7aa7ff;
+      --gold: rgba(212, 175, 55, .55); /* 低調金線 */
       --shadow: 0 10px 30px rgba(0,0,0,.35);
       --radius: 18px;
     }
@@ -33,39 +35,105 @@
       margin: 24px auto 80px;
       padding: 0 16px;
     }
-    header{
+
+    /* ====== 新版同系列標題區 ====== */
+    .hero{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 22px 22px 18px;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:14px;
-      margin-bottom: 14px;
+      gap:18px;
+      overflow:hidden;
+      position:relative;
     }
-    .brand{
-      display:flex; align-items:center; gap:10px;
+    .hero::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background: radial-gradient(900px 500px at 18% 0%, rgba(122,167,255,.10), transparent 60%),
+                  radial-gradient(700px 450px at 110% 10%, rgba(43,213,118,.08), transparent 60%);
+      pointer-events:none;
     }
-    .dot{
-      width:12px; height:12px; border-radius:999px;
-      background: linear-gradient(135deg, var(--accent), rgba(122,167,255,.2));
-      box-shadow: 0 0 0 6px rgba(122,167,255,.12);
+    .heroLeft{
+      position:relative;
+      z-index:1;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-width: 0;
     }
-    h1{font-size:18px; margin:0; letter-spacing:.3px}
-    .sub{font-size:12px; color:var(--muted); margin:3px 0 0}
-    .pill{
-      display:flex; gap:8px; align-items:center;
-      padding:10px 12px; border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
+    .heroTitle{
+      margin:0;
+      font-size: 34px;
+      letter-spacing: .8px;
+      line-height: 1.12;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .heroSub{
+      margin:0;
+      font-size: 18px;
+      color: rgba(232,238,247,.65);
+      letter-spacing: .6px;
+      white-space: nowrap;
+    }
+    .heroMidLine{
+      position:relative;
+      z-index:1;
+      height: 2px;
+      width: 160px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      opacity: .9;
       border-radius: 999px;
-      font-size:12px;
-      color:var(--muted);
+      flex: 0 0 auto;
     }
+    .heroRight{
+      position:relative;
+      z-index:1;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex: 0 0 auto;
+    }
+    .logoBox{
+      width: 120px;
+      height: 64px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius: 14px;
+      border: 1px solid rgba(27,41,64,.9);
+      background: rgba(255,255,255,.02);
+      overflow:hidden;
+    }
+    .logoBox img{
+      max-width: 92%;
+      max-height: 92%;
+      opacity: .88;
+      display:block;
+    }
+
+    /* ====== 卡片通用 ====== */
     .grid{
       display:grid;
       grid-template-columns: 1.2fr .8fr;
       gap:16px;
-      margin-top: 14px;
+      margin-top: 16px;
     }
     @media (max-width: 860px){
       .grid{grid-template-columns: 1fr}
+      .hero{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:14px;
+      }
+      .heroMidLine{width: 100%;}
+      .heroTitle, .heroSub{white-space: normal;}
+      .heroRight{align-self:flex-end;}
     }
     .card{
       background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
@@ -78,7 +146,12 @@
       padding:16px 16px 12px;
       border-bottom:1px solid var(--line);
       background: linear-gradient(180deg, rgba(255,255,255,.02), transparent);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
     }
+    .cardHeadLeft{min-width:0}
     .cardTitle{
       font-size:14px;
       margin:0 0 6px;
@@ -91,8 +164,11 @@
       border-radius: 999px;
       color:var(--muted);
       background: rgba(255,255,255,.02);
+      white-space:nowrap;
     }
+    .sub{font-size:12px; color:var(--muted); margin:0; line-height:1.5}
     .cardBody{padding:16px}
+
     .row{
       display:grid;
       grid-template-columns: 1fr 1fr;
@@ -191,6 +267,7 @@
     .status .txt{line-height:1.5; font-size:12px; color:var(--muted)}
     .status strong{color:var(--text); font-weight:600}
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;}
+
     footer{
       margin-top: 14px;
       color:var(--muted);
@@ -226,30 +303,39 @@
 
 <body>
   <div class="wrap">
-    <header>
-      <div class="brand">
-        <div class="dot"></div>
-        <div>
-          <h1>戰繩｜軌道繩張力估算（樣本）</h1>
-          <div class="sub">輸入重量與角度 → 立即計算每側張力、固定點張力、倍率與警示</div>
+
+    <!-- 同系列標題區塊 -->
+    <section class="hero">
+      <div class="heroLeft">
+        <h1 class="heroTitle">軌道繩張力估算</h1>
+        <p class="heroSub">散木團隊｜教學與判斷輔助工具</p>
+      </div>
+
+      <div class="heroMidLine" aria-hidden="true"></div>
+
+      <div class="heroRight">
+        <div class="logoBox" title="散木LOGO（之後上傳 png）">
+          <!-- 佔位檔名：之後你上傳到 repo 根目錄即可顯示 -->
+          <img src="sunmoon-logo.png" alt="散木LOGO" onerror="this.style.display='none';" />
         </div>
       </div>
-      <div class="pill">
-        <span>模式：</span>
-        <strong id="modeLabel">對稱 V 角（兩固定點）</strong>
-      </div>
-    </header>
+    </section>
 
     <div class="grid">
       <!-- Input Card -->
       <section class="card">
         <div class="cardHead">
-          <div class="cardTitle">
-            參數輸入
-            <span class="tag">MVP</span>
-            <span class="tag">可直接上線</span>
+          <div class="cardHeadLeft">
+            <div class="cardTitle">
+              參數輸入
+              <span class="tag">MVP</span>
+              <span class="tag">即時計算</span>
+            </div>
+            <p class="sub">支援兩種角度表示：V 字夾角 β 或單側仰角 φ（相對水平）。</p>
           </div>
-          <div class="sub">支援兩種角度表示：V 字夾角 β 或單側仰角 φ（相對水平）。</div>
+
+          <!-- 模式移到這裡（不再放版頭右側） -->
+          <div class="tag" id="modeLabel">模式：對稱 V 角（兩固定點）</div>
         </div>
 
         <div class="cardBody">
@@ -266,7 +352,7 @@
                 <option value="kgf">kgf（工程直覺）</option>
                 <option value="N">N（標準力單位，W×9.81）</option>
               </select>
-              <div class="hint">你們現場若都講「公斤」比較快，就用 kgf；要更標準就切到 N。</div>
+              <div class="hint">現場若都講「公斤」比較快，就用 kgf；要更標準就切到 N。</div>
             </div>
           </div>
 
@@ -280,7 +366,7 @@
             <div class="row">
               <div>
                 <input id="beta" type="number" min="1" max="179" step="1" value="120" />
-                <div class="hint">β 越大 → 繩越「水平」 → 張力越暴衝。</div>
+                <div class="hint">β 越大 → 繩越「水平」 → 張力越爆衝。</div>
               </div>
               <div>
                 <input id="betaRange" type="range" min="10" max="170" step="1" value="120" />
@@ -309,7 +395,7 @@
           </div>
 
           <footer>
-            計算模型假設：對稱 V 角、受力點在中間、兩側張力相同。若是「受力點偏一側」的不對稱狀況，需要再加一個角度參數（下一版可做）。
+            計算模型假設：對稱 V 角、受力點在中間、兩側張力相同。若是「受力點偏一側」的不對稱狀況，需要再加入角度參數。
           </footer>
         </div>
       </section>
@@ -317,11 +403,13 @@
       <!-- Result Card -->
       <section class="card">
         <div class="cardHead">
-          <div class="cardTitle">
-            計算結果
-            <span class="tag">即時計算</span>
+          <div class="cardHeadLeft">
+            <div class="cardTitle">
+              計算結果
+              <span class="tag">即時計算</span>
+            </div>
+            <p class="sub">顯示每側繩段張力 T、每固定點拉力、張力倍率（T/W）、危險提示。</p>
           </div>
-          <div class="sub">顯示每側繩段張力 T、每固定點拉力、張力倍率（T/W）、危險提示。</div>
         </div>
 
         <div class="cardBody">
@@ -359,7 +447,6 @@
                 <span class="mono">β ↔ φ</span>
               </div>
               <p class="val mono" id="eqAngle">—</p>
-              <small>方便對照教學</small>
             </div>
           </div>
 
@@ -370,10 +457,10 @@
           </div>
 
           <div class="hint" style="margin-top:12px;">
-            教學語：<span class="mono">繩越水平，張力越爆。</span>（這句我幫你們寫死在 UI 裡，學員看到就會怕，剛好。）
+            注意：<span class="mono">繩越水平，張力越爆。</span>
           </div>
 
-          <div class="hint mono" id="rawText" style="margin-top:12px; white-space:pre-wrap;"></div>
+          <!-- 原本畫面上的估算摘要已移除，但複製功能仍保留（JS 會用 hiddenText） -->
         </div>
       </section>
     </div>
@@ -409,13 +496,13 @@
 
   const lamp = el('lamp');
   const statusText = el('statusText');
-  const rawText = el('rawText');
 
   const copyBtn = el('copyBtn');
   const resetBtn = el('resetBtn');
   const toast = el('toast');
 
   let angleMode = 'beta'; // 'beta' or 'phi'
+  let hiddenText = "";    // 用於複製，不顯示在畫面
 
   function clamp(num, min, max){
     return Math.max(min, Math.min(max, num));
@@ -425,7 +512,6 @@
   function r2(x){ return Math.round(x * 100) / 100; }
 
   function toForce(valueKgf){
-    // internal compute in kgf; convert to N if needed
     if(unit.value === 'N'){
       return valueKgf * 9.81;
     }
@@ -443,11 +529,12 @@
       return;
     }
 
-    // We'll compute using kgf first (engineering intuitive):
-    // If W input is kg (mass), treat W_kgf = W (approx). (You can choose to make it exact later.)
+    // internal compute in kgf
     const W_kgf = Wkg;
 
     let betaDeg, phiDeg;
+
+    let T_kgf;
 
     if(angleMode === 'beta'){
       betaDeg = clamp(parseFloat(beta.value), 1, 179);
@@ -456,13 +543,12 @@
 
       phiDeg = 90 - (betaDeg / 2);
 
-      // T = W / (2*cos(beta/2))
       const cosTerm = Math.cos(deg2rad(betaDeg / 2));
       if(cosTerm <= 0.00001){
-        renderInvalid("角度太極端，無法計算（cos→0）");
+        renderInvalid("角度太極端，無法計算");
         return;
       }
-      var T_kgf = W_kgf / (2 * cosTerm);
+      T_kgf = W_kgf / (2 * cosTerm);
 
     }else{
       phiDeg = clamp(parseFloat(phi.value), 1, 89);
@@ -471,13 +557,12 @@
 
       betaDeg = 2 * (90 - phiDeg);
 
-      // T = W / (2*sin(phi))
       const sinTerm = Math.sin(deg2rad(phiDeg));
       if(sinTerm <= 0.00001){
-        renderInvalid("角度太小，無法計算（sin→0）");
+        renderInvalid("角度太小，無法計算");
         return;
       }
-      var T_kgf = W_kgf / (2 * sinTerm);
+      T_kgf = W_kgf / (2 * sinTerm);
     }
 
     const ratio = T_kgf / W_kgf;
@@ -498,10 +583,6 @@
   }
 
   function evaluateWarning(betaDeg, phiDeg, ratio){
-    // Simple, practical rules (can be tuned):
-    // beta warning: >120 yellow, >=150 red
-    // phi warning: <30 yellow, <20 red
-    // ratio: >2.0 yellow, >3.0 red (assistive)
     let level = 'good';
     let title = "綠燈：張力在可控範圍";
     let msg   = "角度尚可，仍建議確認固定點方向、備援與保護。";
@@ -522,29 +603,30 @@
     }else if(betaYel || phiYel || ratioYel){
       level = 'warn';
       title = "黃燈：張力上升明顯";
-      msg   = "已進入『角度敏感區』。小幅調整角度就可能讓張力跳一截，請確認錨點/保護與操作策略。";
+      msg   = "已進入角度敏感區。小幅調整角度就可能讓張力上升，請確認錨點/保護與操作策略。";
     }
 
     return {level, title, msg};
   }
 
   function renderWarning(warn, Wkg, betaDeg, phiDeg, T_display, ratio){
+    const root = getComputedStyle(document.documentElement);
     if(warn.level === 'good'){
-      lamp.style.background = getComputedStyle(document.documentElement).getPropertyValue('--good');
+      lamp.style.background = root.getPropertyValue('--good');
     }else if(warn.level === 'warn'){
-      lamp.style.background = getComputedStyle(document.documentElement).getPropertyValue('--warn');
+      lamp.style.background = root.getPropertyValue('--warn');
     }else{
-      lamp.style.background = getComputedStyle(document.documentElement).getPropertyValue('--bad');
+      lamp.style.background = root.getPropertyValue('--bad');
     }
     statusText.innerHTML = `<strong>${warn.title}</strong><br/>${warn.msg}`;
 
-    // raw text for copy
+    // hidden copy text (not shown in UI)
     const unitTxt = unitLabel();
     const angleTxt = `β=${r2(betaDeg)}° / φ=${r2(phiDeg)}°`;
     const Ttxt = `${r2(T_display)} ${unitTxt}`;
     const ratioTxt = `${r2(ratio)} 倍`;
 
-    rawText.textContent =
+    hiddenText =
 `【戰繩｜軌道繩張力估算】
 模型：對稱V角（兩固定點）
 輸入：W=${r2(Wkg)} kg；角度：${angleTxt}
@@ -560,7 +642,7 @@
     eqAngle_out.textContent = "—";
     lamp.style.background = getComputedStyle(document.documentElement).getPropertyValue('--bad');
     statusText.innerHTML = `<strong>無法計算</strong><br/>${message}`;
-    rawText.textContent = "";
+    hiddenText = "";
   }
 
   function setMode(mode){
@@ -586,7 +668,7 @@
   }
 
   async function copyText(){
-    const txt = rawText.textContent.trim();
+    const txt = (hiddenText || "").trim();
     if(!txt){
       showToast("沒有可複製內容");
       return;
@@ -595,7 +677,6 @@
       await navigator.clipboard.writeText(txt);
       showToast("已複製到剪貼簿");
     }catch(e){
-      // fallback
       const ta = document.createElement('textarea');
       ta.value = txt;
       document.body.appendChild(ta);
@@ -616,13 +697,11 @@
     setMode('beta');
   }
 
-  // bind events
   btnBeta.addEventListener('click', ()=>setMode('beta'));
   btnPhi.addEventListener('click', ()=>setMode('phi'));
 
   [w, unit, beta, betaRange, phi, phiRange].forEach(x=>{
     x.addEventListener('input', ()=>{
-      // sync paired inputs
       if(x === betaRange) beta.value = betaRange.value;
       if(x === beta) betaRange.value = beta.value;
 
@@ -636,7 +715,6 @@
   copyBtn.addEventListener('click', copyText);
   resetBtn.addEventListener('click', resetAll);
 
-  // init
   compute();
 </script>
 </body>
