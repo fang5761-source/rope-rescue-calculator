@@ -71,12 +71,12 @@
       letter-spacing: .6px;
       line-height: 1.08;
       /* Smaller so it won't wrap like friction header */
-      font-size: clamp(26px, 5.0vw, 38px);
+      font-size: clamp(24px, 4.6vw, 36px);
       white-space: nowrap;
     }
     .heroSub{
       margin: 10px 0 0;
-      font-size: clamp(14px, 2.9vw, 18px);
+      font-size: clamp(13px, 2.7vw, 17px);
       color: rgba(232,238,247,.62);
       letter-spacing: .4px;
       white-space: nowrap;
@@ -105,26 +105,39 @@
   justify-self: end;
 }
 .logoBox img{
-  height: 52px; /* bigger logo */
+  height: 52px; /* base */
   width: auto;
-  opacity: .95; /* slightly lighter */
-  filter: brightness(1.12);
+  opacity: .88;
+  filter: brightness(.98);
   display:block;
 }
 
-    @media (max-width: 420px){
+    
+    /* Platform tuning: iOS vs Android sizing */
+    @supports (-webkit-touch-callout: none){
+      /* iOS Safari: keep logo slightly smaller to avoid crowding */
+      .logoBox img{height: 50px;}
+    }
+    @supports not (-webkit-touch-callout: none){
+      /* Android/others: give logo a bit more presence */
+      @media (max-width: 520px) and (pointer: coarse){
+        .logoBox img{height: 58px;}
+      }
+    }
+
+@media (max-width: 420px){
       .hero{padding: 18px 16px 14px;}
       .heroGrid{gap: 10px;}
-      .heroTitle{font-size: 26px;}
-      .heroSub{font-size: 14px;}
+      .heroTitle{font-size: 24px;}
+      .heroSub{font-size: 13px;}
       .logoBox img{height: 46px;}
     }
 
     @media (max-width: 380px){
       .hero{padding: 18px 16px 14px;}
       .heroGrid{gap: 10px;}
-      .heroTitle{font-size: 24px; letter-spacing: .3px;}
-      .heroSub{font-size: 13px; letter-spacing: .2px;}
+      .heroTitle{font-size: 22px; letter-spacing: .3px;}
+      .heroSub{font-size: 12px; letter-spacing: .2px;}
       .logoBox img{height: 44px;}
     }
 
