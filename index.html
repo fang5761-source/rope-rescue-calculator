@@ -459,6 +459,13 @@
     }
     details[open] summary.summaryHead::after{transform: rotate(180deg);}
 
+
+    /* Prevent iOS double-tap zoom on small controls */
+    button, .chip, .pill, .btn, .segBtn, input[type="range"]{
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
 </style>
 </head>
 <body>
@@ -493,11 +500,17 @@
 <div class="hint">包含：傷患 + 擔架 + 協助手 + 裝備（只要掛在系統上的都算進來）。</div>
 </div>
 <div>
+
 <label for="unit">輸出單位</label>
-<select id="unit">
-<option value="kgf">kgf（工程直覺）</option>
-<option value="N">N（標準力單位，W×9.81）</option>
+<div class="seg" role="group" aria-label="輸出單位">
+  <button type="button" class="segBtn primary" id="unitKgf">kgf</button>
+  <button type="button" class="segBtn" id="unitN">N</button>
+</div>
+<select id="unit" style="display:none">
+  <option value="kgf" selected>kgf（公斤力）</option>
+  <option value="N">N（牛頓）</option>
 </select>
+
 <div class="hint">現場若都講「公斤」比較快，就用 kgf；要更標準就切到 N。</div>
 </div>
 </div>
@@ -601,10 +614,7 @@
   <details class="card" id="a2hs">
     <summary class="cardHead summaryHead">
       <div style="min-width:0">
-        <h2 class="cardTitle">加入主畫面（選用）</h2>
-        <p class="sub">可直接點連結使用；若要更方便，可將捷徑加入主畫面。</p>
-      </div>
-    </summary>
+        <h2 class="cardTitle">加入主畫面（選用）</h2></div></summary>
     <div class="cardBody">
       <div class="hint" style="margin-top:0">
         你可以直接點開連結使用，不一定要加入主畫面。<br/>
@@ -632,10 +642,7 @@
   <details class="card" id="devinfo">
     <summary class="cardHead summaryHead">
       <div style="min-width:0">
-        <h2 class="cardTitle">開發與版本資訊</h2>
-        <p class="sub">開發者、設計者與版本資訊。</p>
-      </div>
-    </summary>
+        <h2 class="cardTitle">開發與版本資訊</h2></div></summary>
     <div class="cardBody">
       <div class="hint" style="margin-top:0">
         本工具由 <strong>散木團隊</strong> 開發製作<br/>
@@ -644,12 +651,9 @@
         AI 協作輔助／ChatGPT
       </div>
       <div class="hint">
-        <strong>版本</strong>：v1.1.3｜2026
+        <strong>版本</strong>：v1.1.4｜2026
       </div>
-      <div class="hint">
-        <strong>備註</strong>：摩擦力模型與情境設定源自「子惠繩」與子惠結在實務操作中的纏繞摩擦需求。
-      </div>
-    </div>
+</div>
   </details>
 </div>
 
@@ -822,17 +826,19 @@
   }
 
   function applyQuickAngle(mode, val){
+    // 只在需要時切換模式，避免視覺上「一直跳來跳去」
+    if(mode !== angleMode){
+      setMode(mode);
+    }
     if(mode === 'beta'){
-      setMode('beta');
       beta.value = val;
-
+      betaRange.value = val;
     }else{
-      setMode('phi');
       phi.value = val;
-
+      phiRange.value = val;
     }
     setActiveChip(mode, val);
-    // compute() 已在 setMode() 內觸發
+    compute();
   }
 
 function setMode(mode){
@@ -954,3 +960,19 @@ document.querySelectorAll('.chip[data-angle]').forEach(chip=>{
 </script>
 </body>
 </html>
+  <details class="card" id="disclaimer">
+    <summary class="cardHead summaryHead">
+      <div style="min-width:0">
+        <h2 class="cardTitle">教學使用聲明</h2>
+      </div>
+    </summary>
+    <div class="cardBody">
+      <div class="hint" style="margin-top:0">
+        1) 本工具為「教學與判斷輔助」用途，提供張力估算與風險提示，非安全保證。<br/>
+        2) 現場仍應以 SOP、器材規格、固定點強度、角度/摩擦/動態因素與指揮判斷為準。<br/>
+        3) 若條件不明或存在高風險（人員、設備、環境），請採取更保守的配置與冗餘保護。
+      </div>
+    </div>
+  </details>
+
+
