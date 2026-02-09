@@ -71,12 +71,12 @@
       letter-spacing: .6px;
       line-height: 1.08;
       /* Smaller so it won't wrap like friction header */
-      font-size: clamp(28px, 5.4vw, 40px);
+      font-size: clamp(26px, 5.0vw, 38px);
       white-space: nowrap;
     }
     .heroSub{
       margin: 10px 0 0;
-      font-size: clamp(16px, 3.2vw, 20px);
+      font-size: clamp(14px, 2.9vw, 18px);
       color: rgba(232,238,247,.62);
       letter-spacing: .4px;
       white-space: nowrap;
@@ -105,26 +105,27 @@
   justify-self: end;
 }
 .logoBox img{
-  height: 44px;
+  height: 52px; /* bigger logo */
   width: auto;
-  opacity: .9;
+  opacity: .95; /* slightly lighter */
+  filter: brightness(1.12);
   display:block;
 }
 
     @media (max-width: 420px){
       .hero{padding: 18px 16px 14px;}
       .heroGrid{gap: 10px;}
-      .heroTitle{font-size: 28px;}
-      .heroSub{font-size: 16px;}
-      .logoBox img{height: 38px;}
+      .heroTitle{font-size: 26px;}
+      .heroSub{font-size: 14px;}
+      .logoBox img{height: 46px;}
     }
 
     @media (max-width: 380px){
       .hero{padding: 18px 16px 14px;}
       .heroGrid{gap: 10px;}
-      .heroTitle{font-size: 28px; letter-spacing: .3px;}
-      .heroSub{font-size: 14px; letter-spacing: .2px;}
-      .logoBox{width: 96px; height: 56px;}
+      .heroTitle{font-size: 24px; letter-spacing: .3px;}
+      .heroSub{font-size: 13px; letter-spacing: .2px;}
+      .logoBox img{height: 44px;}
     }
 
     /* ====== Cards ====== */
