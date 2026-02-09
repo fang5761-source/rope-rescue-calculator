@@ -32,7 +32,7 @@
       color:var(--text);
     }
     .wrap{
-      max-width: 980px;
+      max-width: 860px;
       margin: 18px auto 80px;
       padding: 0 16px;
     }
@@ -71,12 +71,12 @@
       letter-spacing: .6px;
       line-height: 1.08;
       /* Smaller so it won't wrap like friction header */
-      font-size: clamp(24px, 4.6vw, 36px);
+      font-size: clamp(22px, 4.2vw, 34px);
       white-space: nowrap;
     }
     .heroSub{
       margin: 10px 0 0;
-      font-size: clamp(13px, 2.7vw, 17px);
+      font-size: clamp(12px, 2.6vw, 16px);
       color: rgba(232,238,247,.62);
       letter-spacing: .4px;
       white-space: nowrap;
@@ -98,6 +98,7 @@
   display:flex;
   align-items:center;
   justify-content:flex-end;
+  padding-left: 4px;
   border: none;
   background: transparent;
   overflow: visible;
@@ -105,23 +106,27 @@
   justify-self: end;
 }
 .logoBox img{
-  height: 52px; /* base */
+  height: 56px; /* base */
   width: auto;
-  opacity: .88;
-  filter: brightness(.98);
   display:block;
+  /* make it feel like a watermark (less harsh than pure white) */
+  opacity: .62;
+  filter: brightness(.84) contrast(.92) saturate(.9);
+  /* subtle glow, keep consistent with series */
+  -webkit-filter: brightness(.84) contrast(.92) saturate(.9) drop-shadow(0 0 6px rgba(212,175,55,.10)) drop-shadow(0 0 10px rgba(122,167,255,.10));
+          filter: brightness(.84) contrast(.92) saturate(.9) drop-shadow(0 0 6px rgba(212,175,55,.10)) drop-shadow(0 0 10px rgba(122,167,255,.10));
 }
 
     
     /* Platform tuning: iOS vs Android sizing */
     @supports (-webkit-touch-callout: none){
       /* iOS Safari: keep logo slightly smaller to avoid crowding */
-      .logoBox img{height: 50px;}
+      .logoBox img{height: 52px;}
     }
     @supports not (-webkit-touch-callout: none){
       /* Android/others: give logo a bit more presence */
       @media (max-width: 520px) and (pointer: coarse){
-        .logoBox img{height: 58px;}
+        .logoBox img{height: 62px;}
       }
     }
 
@@ -130,7 +135,7 @@
       .heroGrid{gap: 10px;}
       .heroTitle{font-size: 24px;}
       .heroSub{font-size: 13px;}
-      .logoBox img{height: 46px;}
+      .logoBox img{height: 52px;}
     }
 
     @media (max-width: 380px){
@@ -138,7 +143,7 @@
       .heroGrid{gap: 10px;}
       .heroTitle{font-size: 22px; letter-spacing: .3px;}
       .heroSub{font-size: 12px; letter-spacing: .2px;}
-      .logoBox img{height: 44px;}
+      .logoBox img{height: 50px;}
     }
 
     /* ====== Cards ====== */
@@ -155,6 +160,7 @@
     @media (max-width: 520px){
       .cardHead{flex-wrap:wrap; align-items:flex-start;}
       .pill{margin-top: 10px;}
+      .cardTitle{font-size:18px;}
     }
 
     .card{
@@ -194,6 +200,9 @@
       background: rgba(122,167,255,.10);
       white-space: nowrap;
       margin-top: 2px;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .cardBody{padding:16px}
 
