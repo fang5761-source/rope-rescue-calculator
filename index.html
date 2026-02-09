@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>戰繩｜軌道繩張力估算（樣本）</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --card:#111826;
+      --card2:#0f1623;
+      --text:#e8eef7;
+      --muted:#a8b3c5;
+      --line:#1b2940;
+      --good:#2bd576;
+      --warn:#ffd166;
+      --bad:#ff5c5c;
+      --accent:#7aa7ff;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: radial-gradient(1200px 800px at 20% -10%, rgba(122,167,255,.18), transparent 55%),
+                  radial-gradient(900px 700px at 110% 10%, rgba(43,213,118,.14), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    .wrap{
+      max-width: 980px;
+      margin: 24px auto 80px;
+      padding: 0 16px;
+    }
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      margin-bottom: 14px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+    }
+    .dot{
+      width:12px; height:12px; border-radius:999px;
+      background: linear-gradient(135deg, var(--accent), rgba(122,167,255,.2));
+      box-shadow: 0 0 0 6px rgba(122,167,255,.12);
+    }
+    h1{font-size:18px; margin:0; letter-spacing:.3px}
+    .sub{font-size:12px; color:var(--muted); margin:3px 0 0}
+    .pill{
+      display:flex; gap:8px; align-items:center;
+      padding:10px 12px; border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      border-radius: 999px;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:16px;
+      margin-top: 14px;
+    }
+    @media (max-width: 860px){
+      .grid{grid-template-columns: 1fr}
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .cardHead{
+      padding:16px 16px 12px;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.02), transparent);
+    }
+    .cardTitle{
+      font-size:14px;
+      margin:0 0 6px;
+      display:flex; gap:10px; align-items:center;
+    }
+    .tag{
+      font-size:11px;
+      padding:3px 8px;
+      border:1px solid var(--line);
+      border-radius: 999px;
+      color:var(--muted);
+      background: rgba(255,255,255,.02);
+    }
+    .cardBody{padding:16px}
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width:560px){
+      .row{grid-template-columns:1fr}
+    }
+    label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom: 6px;
+    }
+    input, select{
+      width:100%;
+      padding:12px 12px;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(10,15,20,.55);
+      color:var(--text);
+      outline:none;
+    }
+    input:focus, select:focus{border-color: rgba(122,167,255,.65)}
+    .hint{
+      font-size:12px;
+      color:var(--muted);
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+    .switch{
+      display:flex; gap:8px; flex-wrap:wrap;
+      margin: 10px 0 12px;
+    }
+    .btn{
+      cursor:pointer;
+      user-select:none;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.02);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius: 12px;
+      font-size:12px;
+      display:inline-flex;
+      gap:8px; align-items:center;
+    }
+    .btn.primary{
+      border-color: rgba(122,167,255,.55);
+      background: rgba(122,167,255,.12);
+    }
+    .btn:active{transform: translateY(1px)}
+    .sliderWrap{
+      padding:12px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.015);
+    }
+    input[type="range"]{padding:0; border:none; background:transparent}
+    .kpi{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width:560px){ .kpi{grid-template-columns:1fr} }
+    .k{
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.015);
+    }
+    .k .name{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom: 8px;
+      display:flex; justify-content:space-between; gap:8px;
+    }
+    .k .val{
+      font-size:20px;
+      letter-spacing:.3px;
+      margin:0;
+    }
+    .k small{font-size:12px; color:var(--muted)}
+    .status{
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      display:flex; gap:10px; align-items:flex-start;
+      background: rgba(255,255,255,.015);
+    }
+    .lamp{
+      width:10px; height:10px; border-radius: 999px; margin-top: 4px;
+      box-shadow: 0 0 0 6px rgba(255,255,255,.04);
+      background: var(--good);
+    }
+    .status .txt{line-height:1.5; font-size:12px; color:var(--muted)}
+    .status strong{color:var(--text); font-weight:600}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;}
+    footer{
+      margin-top: 14px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.6;
+      padding: 0 2px;
+    }
+    .twoBtns{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top: 12px;
+    }
+    .toast{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 16px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(17,24,38,.92);
+      color: var(--text);
+      font-size: 12px;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .2s ease, transform .2s ease;
+    }
+    .toast.show{
+      opacity:1;
+      transform: translateX(-50%) translateY(-4px);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="dot"></div>
+        <div>
+          <h1>戰繩｜軌道繩張力估算（樣本）</h1>
+          <div class="sub">輸入重量與角度 → 立即計算每側張力、固定點張力、倍率與警示</div>
+        </div>
+      </div>
+      <div class="pill">
+        <span>模式：</span>
+        <strong id="modeLabel">對稱 V 角（兩固定點）</strong>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Input Card -->
+      <section class="card">
+        <div class="cardHead">
+          <div class="cardTitle">
+            參數輸入
+            <span class="tag">MVP</span>
+            <span class="tag">可直接上線</span>
+          </div>
+          <div class="sub">支援兩種角度表示：V 字夾角 β 或單側仰角 φ（相對水平）。</div>
+        </div>
+
+        <div class="cardBody">
+          <div class="row">
+            <div>
+              <label for="w">總重量 W（kg）</label>
+              <input id="w" type="number" min="0" step="0.1" value="120" />
+              <div class="hint">包含：傷患 + 擔架 + 協助手 + 裝備（只要掛在系統上的都算進來）。</div>
+            </div>
+
+            <div>
+              <label for="unit">輸出單位</label>
+              <select id="unit">
+                <option value="kgf">kgf（工程直覺）</option>
+                <option value="N">N（標準力單位，W×9.81）</option>
+              </select>
+              <div class="hint">你們現場若都講「公斤」比較快，就用 kgf；要更標準就切到 N。</div>
+            </div>
+          </div>
+
+          <div class="switch">
+            <div class="btn primary" id="btnBeta">角度用 β（V 字夾角）</div>
+            <div class="btn" id="btnPhi">角度用 φ（單側仰角）</div>
+          </div>
+
+          <div id="betaBox" class="sliderWrap">
+            <label for="beta">V 字夾角 β（度）</label>
+            <div class="row">
+              <div>
+                <input id="beta" type="number" min="1" max="179" step="1" value="120" />
+                <div class="hint">β 越大 → 繩越「水平」 → 張力越暴衝。</div>
+              </div>
+              <div>
+                <input id="betaRange" type="range" min="10" max="170" step="1" value="120" />
+                <div class="hint mono">快速拖拉調角度</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="phiBox" class="sliderWrap" style="display:none;">
+            <label for="phi">單側仰角 φ（度，相對水平）</label>
+            <div class="row">
+              <div>
+                <input id="phi" type="number" min="1" max="89" step="1" value="30" />
+                <div class="hint">φ 越小 → 越水平 → 張力越大。</div>
+              </div>
+              <div>
+                <input id="phiRange" type="range" min="5" max="85" step="1" value="30" />
+                <div class="hint mono">快速拖拉調角度</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="twoBtns">
+            <div class="btn" id="copyBtn">複製結果（純文字）</div>
+            <div class="btn" id="resetBtn">重設（回預設值）</div>
+          </div>
+
+          <footer>
+            計算模型假設：對稱 V 角、受力點在中間、兩側張力相同。若是「受力點偏一側」的不對稱狀況，需要再加一個角度參數（下一版可做）。
+          </footer>
+        </div>
+      </section>
+
+      <!-- Result Card -->
+      <section class="card">
+        <div class="cardHead">
+          <div class="cardTitle">
+            計算結果
+            <span class="tag">即時計算</span>
+          </div>
+          <div class="sub">顯示每側繩段張力 T、每固定點拉力、張力倍率（T/W）、危險提示。</div>
+        </div>
+
+        <div class="cardBody">
+          <div class="kpi">
+            <div class="k">
+              <div class="name">
+                <span>每側張力 T</span>
+                <span class="mono" id="unitT">kgf</span>
+              </div>
+              <p class="val mono" id="T">—</p>
+              <small>兩側相同（對稱假設）</small>
+            </div>
+
+            <div class="k">
+              <div class="name">
+                <span>每固定點拉力</span>
+                <span class="mono" id="unitA">kgf</span>
+              </div>
+              <p class="val mono" id="A">—</p>
+              <small>通常≈T（方向沿繩）</small>
+            </div>
+
+            <div class="k">
+              <div class="name">
+                <span>張力倍率</span>
+                <span class="mono">T/W</span>
+              </div>
+              <p class="val mono" id="ratio">—</p>
+              <small>倍率越高越危險</small>
+            </div>
+
+            <div class="k">
+              <div class="name">
+                <span>等效角度</span>
+                <span class="mono">β ↔ φ</span>
+              </div>
+              <p class="val mono" id="eqAngle">—</p>
+              <small>方便對照教學</small>
+            </div>
+          </div>
+
+          <div class="status" id="statusBox">
+            <div class="lamp" id="lamp"></div>
+            <div class="txt" id="statusText">
+              <strong>—</strong><br/>—</div>
+          </div>
+
+          <div class="hint" style="margin-top:12px;">
+            教學語：<span class="mono">繩越水平，張力越爆。</span>（這句我幫你們寫死在 UI 裡，學員看到就會怕，剛好。）
+          </div>
+
+          <div class="hint mono" id="rawText" style="margin-top:12px; white-space:pre-wrap;"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">已複製到剪貼簿</div>
+
+<script>
+  const el = (id)=>document.getElementById(id);
+
+  const w = el('w');
+  const unit = el('unit');
+
+  const btnBeta = el('btnBeta');
+  const btnPhi  = el('btnPhi');
+
+  const betaBox = el('betaBox');
+  const phiBox  = el('phiBox');
+
+  const beta = el('beta');
+  const betaRange = el('betaRange');
+
+  const phi = el('phi');
+  const phiRange = el('phiRange');
+
+  const T_out = el('T');
+  const A_out = el('A');
+  const ratio_out = el('ratio');
+  const eqAngle_out = el('eqAngle');
+
+  const unitT = el('unitT');
+  const unitA = el('unitA');
+
+  const lamp = el('lamp');
+  const statusText = el('statusText');
+  const rawText = el('rawText');
+
+  const copyBtn = el('copyBtn');
+  const resetBtn = el('resetBtn');
+  const toast = el('toast');
+
+  let angleMode = 'beta'; // 'beta' or 'phi'
+
+  function clamp(num, min, max){
+    return Math.max(min, Math.min(max, num));
+  }
+
+  function deg2rad(d){ return d * Math.PI / 180; }
+  function r2(x){ return Math.round(x * 100) / 100; }
+
+  function toForce(valueKgf){
+    // internal compute in kgf; convert to N if needed
+    if(unit.value === 'N'){
+      return valueKgf * 9.81;
+    }
+    return valueKgf;
+  }
+
+  function unitLabel(){
+    return unit.value === 'N' ? 'N' : 'kgf';
+  }
+
+  function compute(){
+    const Wkg = parseFloat(w.value);
+    if(!isFinite(Wkg) || Wkg <= 0){
+      renderInvalid("重量需要 > 0");
+      return;
+    }
+
+    // We'll compute using kgf first (engineering intuitive):
+    // If W input is kg (mass), treat W_kgf = W (approx). (You can choose to make it exact later.)
+    const W_kgf = Wkg;
+
+    let betaDeg, phiDeg;
+
+    if(angleMode === 'beta'){
+      betaDeg = clamp(parseFloat(beta.value), 1, 179);
+      beta.value = betaDeg;
+      betaRange.value = betaDeg;
+
+      phiDeg = 90 - (betaDeg / 2);
+
+      // T = W / (2*cos(beta/2))
+      const cosTerm = Math.cos(deg2rad(betaDeg / 2));
+      if(cosTerm <= 0.00001){
+        renderInvalid("角度太極端，無法計算（cos→0）");
+        return;
+      }
+      var T_kgf = W_kgf / (2 * cosTerm);
+
+    }else{
+      phiDeg = clamp(parseFloat(phi.value), 1, 89);
+      phi.value = phiDeg;
+      phiRange.value = phiDeg;
+
+      betaDeg = 2 * (90 - phiDeg);
+
+      // T = W / (2*sin(phi))
+      const sinTerm = Math.sin(deg2rad(phiDeg));
+      if(sinTerm <= 0.00001){
+        renderInvalid("角度太小，無法計算（sin→0）");
+        return;
+      }
+      var T_kgf = W_kgf / (2 * sinTerm);
+    }
+
+    const ratio = T_kgf / W_kgf;
+
+    const T_display = toForce(T_kgf);
+    const A_display = toForce(T_kgf);
+
+    unitT.textContent = unitLabel();
+    unitA.textContent = unitLabel();
+
+    T_out.textContent = r2(T_display).toLocaleString('en-US');
+    A_out.textContent = r2(A_display).toLocaleString('en-US');
+    ratio_out.textContent = r2(ratio).toLocaleString('en-US');
+    eqAngle_out.textContent = `β ${r2(betaDeg)}°  ↔  φ ${r2(phiDeg)}°`;
+
+    const warn = evaluateWarning(betaDeg, phiDeg, ratio);
+    renderWarning(warn, Wkg, betaDeg, phiDeg, T_display, ratio);
+  }
+
+  function evaluateWarning(betaDeg, phiDeg, ratio){
+    // Simple, practical rules (can be tuned):
+    // beta warning: >120 yellow, >=150 red
+    // phi warning: <30 yellow, <20 red
+    // ratio: >2.0 yellow, >3.0 red (assistive)
+    let level = 'good';
+    let title = "綠燈：張力在可控範圍";
+    let msg   = "角度尚可，仍建議確認固定點方向、備援與保護。";
+
+    const betaRed = (betaDeg >= 150);
+    const betaYel = (betaDeg > 120);
+
+    const phiRed  = (phiDeg < 20);
+    const phiYel  = (phiDeg < 30);
+
+    const ratioRed = (ratio >= 3.0);
+    const ratioYel = (ratio >= 2.0);
+
+    if(betaRed || phiRed || ratioRed){
+      level = 'bad';
+      title = "紅燈：張力暴衝風險高";
+      msg   = "繩段過水平，固定點拉力會大幅上升。建議改變幾何（縮小β/增大φ）、增加中間支撐或改架設。";
+    }else if(betaYel || phiYel || ratioYel){
+      level = 'warn';
+      title = "黃燈：張力上升明顯";
+      msg   = "已進入『角度敏感區』。小幅調整角度就可能讓張力跳一截，請確認錨點/保護與操作策略。";
+    }
+
+    return {level, title, msg};
+  }
+
+  function renderWarning(warn, Wkg, betaDeg, phiDeg, T_display, ratio){
+    if(warn.level === 'good'){
+      lamp.style.background = getComputedStyle(document.documentElement).getPropertyValue('--good');
+    }else if(warn.level === 'warn'){
+      lamp.style.background = getComputedStyle(document.documentElement).getPropertyValue('--warn');
+    }else{
+      lamp.style.background = getComputedStyle(document.documentElement).getPropertyValue('--bad');
+    }
+    statusText.innerHTML = `<strong>${warn.title}</strong><br/>${warn.msg}`;
+
+    // raw text for copy
+    const unitTxt = unitLabel();
+    const angleTxt = `β=${r2(betaDeg)}° / φ=${r2(phiDeg)}°`;
+    const Ttxt = `${r2(T_display)} ${unitTxt}`;
+    const ratioTxt = `${r2(ratio)} 倍`;
+
+    rawText.textContent =
+`【戰繩｜軌道繩張力估算】
+模型：對稱V角（兩固定點）
+輸入：W=${r2(Wkg)} kg；角度：${angleTxt}
+輸出：每側張力T=${Ttxt}；每固定點≈${Ttxt}
+張力倍率：T/W=${ratioTxt}
+提示：${warn.title}｜${warn.msg}`;
+  }
+
+  function renderInvalid(message){
+    T_out.textContent = "—";
+    A_out.textContent = "—";
+    ratio_out.textContent = "—";
+    eqAngle_out.textContent = "—";
+    lamp.style.background = getComputedStyle(document.documentElement).getPropertyValue('--bad');
+    statusText.innerHTML = `<strong>無法計算</strong><br/>${message}`;
+    rawText.textContent = "";
+  }
+
+  function setMode(mode){
+    angleMode = mode;
+    if(mode === 'beta'){
+      btnBeta.classList.add('primary');
+      btnPhi.classList.remove('primary');
+      betaBox.style.display = '';
+      phiBox.style.display = 'none';
+    }else{
+      btnPhi.classList.add('primary');
+      btnBeta.classList.remove('primary');
+      betaBox.style.display = 'none';
+      phiBox.style.display = '';
+    }
+    compute();
+  }
+
+  function showToast(text){
+    toast.textContent = text || "已複製到剪貼簿";
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'), 1400);
+  }
+
+  async function copyText(){
+    const txt = rawText.textContent.trim();
+    if(!txt){
+      showToast("沒有可複製內容");
+      return;
+    }
+    try{
+      await navigator.clipboard.writeText(txt);
+      showToast("已複製到剪貼簿");
+    }catch(e){
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = txt;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast("已複製（備援模式）");
+    }
+  }
+
+  function resetAll(){
+    w.value = 120;
+    unit.value = 'kgf';
+    beta.value = 120;
+    betaRange.value = 120;
+    phi.value = 30;
+    phiRange.value = 30;
+    setMode('beta');
+  }
+
+  // bind events
+  btnBeta.addEventListener('click', ()=>setMode('beta'));
+  btnPhi.addEventListener('click', ()=>setMode('phi'));
+
+  [w, unit, beta, betaRange, phi, phiRange].forEach(x=>{
+    x.addEventListener('input', ()=>{
+      // sync paired inputs
+      if(x === betaRange) beta.value = betaRange.value;
+      if(x === beta) betaRange.value = beta.value;
+
+      if(x === phiRange) phi.value = phiRange.value;
+      if(x === phi) phiRange.value = phi.value;
+
+      compute();
+    });
+  });
+
+  copyBtn.addEventListener('click', copyText);
+  resetBtn.addEventListener('click', resetAll);
+
+  // init
+  compute();
+</script>
+</body>
+</html>
