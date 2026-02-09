@@ -37,54 +37,92 @@
       padding: 0 16px;
     }
 
-    /* ===== Header (Title + Subtitle + Logo) | match friction tool ===== */
-    .card.hero{padding:18px 18px 16px; position:relative; overflow:hidden;}
-    .title-wrap{display:flex;align-items:center;justify-content:space-between;gap:14px}
-    .title-text{min-width:0}
-    .title-text h1{
+    /* ====== Header (match friction series style) ====== */
+    .hero{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 20px 20px 16px;
+      overflow:hidden;
+      position:relative;
+    }
+    .hero::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background:
+        radial-gradient(900px 500px at 18% 0%, rgba(122,167,255,.10), transparent 60%),
+        radial-gradient(700px 450px at 110% 10%, rgba(43,213,118,.08), transparent 60%);
+      pointer-events:none;
+    }
+    .heroGrid{
+      position:relative;
+      z-index:1;
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items:center;
+    }
+    .heroLeft{min-width:0}
+    .heroTitle{
       margin:0;
-      font-size:20px;
-      font-weight:1000;
-      letter-spacing:.2px;
-      white-space:nowrap;
+      font-weight: 850;
+      letter-spacing: .6px;
+      line-height: 1.08;
+      /* Smaller so it won't wrap like friction header */
+      font-size: clamp(30px, 6vw, 42px);
+      white-space: nowrap;
+    }
+    .heroSub{
+      margin: 10px 0 0;
+      font-size: clamp(16px, 3.2vw, 20px);
+      color: rgba(232,238,247,.62);
+      letter-spacing: .4px;
+      white-space: nowrap;
+    }
+    .heroLine{
+      position:relative;
+      z-index:1;
+      height: 2px;
+      width: 100%;
+      margin: 14px 0 0;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      opacity: .9;
+      border-radius: 999px;
+    }
+    .logoBox{
+      width: clamp(96px, 18vw, 124px);
+      height: clamp(56px, 10vw, 68px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius: 16px;
+      border: 1px solid rgba(27,41,64,.9);
+      background: rgba(255,255,255,.02);
       overflow:hidden;
-      text-overflow:ellipsis;
+      flex: 0 0 auto;
     }
-    .title-divider{
-      width:100%;
-      height:1px;
-      margin:10px 0 8px;
-      background:linear-gradient(
-        90deg,
-        transparent,
-        rgba(212,175,55,0.14),
-        rgba(212,175,55,0.28),
-        rgba(212,175,55,0.14),
-        transparent
-      );
-    }
-    .subtitle{
-      font-size:13px;
-      color:var(--muted);
-      letter-spacing:.2px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .title-logo{
-      width:56px;height:56px;
-      background-image:url("sunmoon_logo.png?cb=520");
-      background-size:contain;
-      background-repeat:no-repeat;
-      background-position:center;
-      opacity:0.55;
-      flex-shrink:0;
-      border-radius:14px;
-      filter:
-        drop-shadow(0 0 6px rgba(212,175,55,.10))
-        drop-shadow(0 0 10px rgba(56,189,248,.10));
+    .logoBox img{
+      max-width: 92%;
+      max-height: 92%;
+      opacity: .9;
+      display:block;
     }
 
+    @media (max-width: 420px){
+      .heroTitle{font-size: 30px;}
+      .heroSub{font-size: 16px;}
+      .logoBox{width: 112px; height: 62px;}
+    }
+
+    @media (max-width: 380px){
+      .hero{padding: 18px 16px 14px;}
+      .heroGrid{gap: 10px;}
+      .heroTitle{font-size: 28px; letter-spacing: .3px;}
+      .heroSub{font-size: 14px; letter-spacing: .2px;}
+      .logoBox{width: 96px; height: 56px;}
+    }
 
     /* ====== Cards ====== */
     .grid{
@@ -95,6 +133,11 @@
     }
     @media (min-width: 900px){
       .grid{grid-template-columns: 1.2fr .8fr;}
+    }
+
+    @media (max-width: 520px){
+      .cardHead{flex-wrap:wrap; align-items:flex-start;}
+      .pill{margin-top: 10px;}
     }
 
     .card{
@@ -115,6 +158,7 @@
     }
     .cardTitle{
       font-size:20px;
+      white-space: nowrap;
       margin:0 0 8px;
       letter-spacing:.3px;
     }
@@ -288,18 +332,21 @@
 <body>
   <div class="wrap">
 
-    <div class="card hero">
-      <div class="title-wrap">
-        <div class="title-text">
-          <h1>軌道繩張力估算</h1>
-          <div class="title-divider"></div>
-          <div class="subtitle">散木團隊｜教學與判斷輔助工具</div>
+    <section class="hero">
+      <div class="heroGrid">
+        <div class="heroLeft">
+          <h1 class="heroTitle">軌道繩張力估算</h1>
+          <p class="heroSub">散木團隊｜教學與判斷輔助工具</p>
         </div>
-        <img class="title-logo" src="./sunmoon_logo.png" alt="散木團隊 LOGO"/>
-      </div>
-    </div>
 
-<div class="grid">
+        <div class="logoBox" title="散木LOGO">
+          <img src="sunmoon_logo.png" alt="散木LOGO" onerror="this.style.display='none';" />
+        </div>
+      </div>
+      <div class="heroLine" aria-hidden="true"></div>
+    </section>
+
+    <div class="grid">
       <!-- Input Card -->
       <section class="card">
         <div class="cardHead">
