@@ -656,6 +656,29 @@
       box-shadow: 0 0 0 2px rgba(255,209,102,.12);
       background: rgba(255,209,102,.08);
     }
+
+    /* ===== Button press feedback (reliable on iOS) ===== */
+    .press{
+      border-color: rgba(122,167,255,.95) !important;
+      background: rgba(122,167,255,.18) !important;
+      box-shadow:
+        0 0 0 2px rgba(122,167,255,.32),
+        inset 0 0 0 1px rgba(255,255,255,.18);
+      transform: translateY(1px);
+    }
+
+    /* ===== Reset pulse cue (only when 黃/紅燈) ===== */
+    @keyframes pulseWarn{
+      0%,100%{ box-shadow: 0 0 0 0 rgba(255,209,102,.00); border-color: rgba(255,209,102,.35); }
+      50%{    box-shadow: 0 0 0 6px rgba(255,209,102,.10); border-color: rgba(255,209,102,.75); }
+    }
+    @keyframes pulseBad{
+      0%,100%{ box-shadow: 0 0 0 0 rgba(255,92,92,.00); border-color: rgba(255,92,92,.35); }
+      50%{    box-shadow: 0 0 0 6px rgba(255,92,92,.10); border-color: rgba(255,92,92,.80); }
+    }
+    .pulseWarn{ animation: pulseWarn 1.25s ease-in-out infinite; }
+    .pulseBad{  animation: pulseBad  1.05s ease-in-out infinite; }
+
 </style>
 </head>
 <body>
@@ -1072,6 +1095,8 @@
     const warn = evaluateWarning(betaDeg, phiDeg, ratio);
     renderWarning(warn, Wkg, betaDeg, phiDeg, T_display, ratio);
 
+    setResetPulse(warn.level);
+
     updateRiskTint();
   }
 
@@ -1207,21 +1232,7 @@ function setMode(mode){
 }
 
 function showToast(_text){
-  try{ if(navigator.vibrate) navigator.vibrate(12); }
-
-function scrollToCard(id){
-  const target = document.getElementById(id);
-  if(!target) return;
-  const doScroll = ()=>{
-    const y = target.getBoundingClientRect().top + window.pageYOffset - 10;
-    window.scrollTo({top: y, behavior: 'smooth'});
-  };
-  // iOS/LINE WebView sometimes ignores immediate scroll after DOM updates
-  requestAnimationFrame(()=>requestAnimationFrame(doScroll));
-  setTimeout(doScroll, 80);
-}
-
-catch(e){}
+  try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){}
 }
 
 // ===== Forced press feedback (iOS-safe) =====
@@ -1240,6 +1251,72 @@ function bindPressFeedback(el){
   el.addEventListener('touchend', off, {passive:true});
   el.addEventListener('touchcancel', off, {passive:true});
 }
+
+
+// Reliable press handling on mobile (avoid iOS Safari eating :active/click)
+function bindPressClass(el){
+  if(!el) return;
+  const on = ()=>el.classList.add('press');
+  const off = ()=>el.classList.remove('press');
+  if(window.PointerEvent){
+    el.addEventListener('pointerdown', on, {passive:true});
+    el.addEventListener('pointerup', off, {passive:true});
+    el.addEventListener('pointercancel', off, {passive:true});
+    el.addEventListener('pointerleave', off, {passive:true});
+  }else{
+    el.addEventListener('touchstart', on, {passive:true});
+    el.addEventListener('touchend', off, {passive:true});
+    el.addEventListener('touchcancel', off, {passive:true});
+    el.addEventListener('mousedown', on);
+    el.addEventListener('mouseup', off);
+    el.addEventListener('mouseleave', off);
+  }
+}
+
+// Short press => shortFn; Long press (holdMs) => longFn. Does not rely on click.
+function bindSmartHold(el, shortFn, longFn, holdMs=600){
+  if(!el) return;
+  let t = null;
+  let didLong = false;
+
+  const clear = ()=>{
+    if(t){ clearTimeout(t); t=null; }
+  };
+
+  const start = ()=>{
+    didLong = false;
+    clear();
+    t = setTimeout(()=>{
+      didLong = true;
+      try{ if(navigator.vibrate) navigator.vibrate(18); }catch(e){}
+      if(typeof longFn === 'function') longFn();
+    }, holdMs);
+  };
+
+  const end = ()=>{
+    const wasLong = didLong;
+    clear();
+    if(!wasLong && typeof shortFn === 'function') shortFn();
+  };
+
+  const cancel = ()=>{ clear(); };
+
+  if(window.PointerEvent){
+    el.addEventListener('pointerdown', start, {passive:true});
+    el.addEventListener('pointerup', end, {passive:true});
+    el.addEventListener('pointercancel', cancel, {passive:true});
+    el.addEventListener('pointerleave', cancel, {passive:true});
+  }else{
+    el.addEventListener('touchstart', start, {passive:true});
+    el.addEventListener('touchend', end, {passive:true});
+    el.addEventListener('touchcancel', cancel, {passive:true});
+    // Desktop fallback
+    el.addEventListener('mousedown', start);
+    el.addEventListener('mouseup', end);
+    el.addEventListener('mouseleave', cancel);
+  }
+}
+
 
 async function copyText(){
   const txt = (hiddenText || "").trim();
@@ -1267,6 +1344,78 @@ function resetAll(){
   beta.value = 60;
   phi.value = 30;
   setMode('beta');
+
+function bindPressFeedback(elm){
+  if(!elm) return;
+  const add = ()=>elm.classList.add('press');
+  const rm  = ()=>elm.classList.remove('press');
+
+  // Pointer (modern)
+  elm.addEventListener('pointerdown', add, {passive:true});
+  elm.addEventListener('pointerup', rm, {passive:true});
+  elm.addEventListener('pointercancel', rm, {passive:true});
+  elm.addEventListener('pointerleave', rm, {passive:true});
+
+  // Touch fallback
+  elm.addEventListener('touchstart', add, {passive:true});
+  elm.addEventListener('touchend', rm, {passive:true});
+  elm.addEventListener('touchcancel', rm, {passive:true});
+
+  // Mouse fallback
+  elm.addEventListener('mousedown', add, {passive:true});
+  elm.addEventListener('mouseup', rm, {passive:true});
+  elm.addEventListener('mouseleave', rm, {passive:true});
+}
+
+function bindLongPressReset(elm, onLong){
+  if(!elm) return;
+  const HOLD_MS = 600;
+  let t = null;
+
+  const clear = ()=>{
+    if(t){ clearTimeout(t); t = null; }
+  };
+
+  const startHold = ()=>{
+    clear();
+    elm._longPressed = false;
+    t = setTimeout(()=>{
+      elm._longPressed = true;
+      try{ onLong && onLong(); }catch(e){}
+    }, HOLD_MS);
+  };
+
+  elm.addEventListener('pointerdown', startHold, {passive:true});
+  elm.addEventListener('pointerup', clear, {passive:true});
+  elm.addEventListener('pointercancel', clear, {passive:true});
+  elm.addEventListener('pointerleave', clear, {passive:true});
+
+  elm.addEventListener('touchstart', startHold, {passive:true});
+  elm.addEventListener('touchend', clear, {passive:true});
+  elm.addEventListener('touchcancel', clear, {passive:true});
+
+  elm.addEventListener('mousedown', startHold, {passive:true});
+  elm.addEventListener('mouseup', clear, {passive:true});
+  elm.addEventListener('mouseleave', clear, {passive:true});
+}
+
+function setResetPulse(level){
+  if(!resetBtn2) return;
+  resetBtn2.classList.remove('pulseWarn','pulseBad');
+  if(level === 'warn') resetBtn2.classList.add('pulseWarn');
+  if(level === 'bad')  resetBtn2.classList.add('pulseBad');
+}
+
+function hardClear(){
+  // 真正「重來」：清空為較保守的預設，並把焦點帶回上方
+  w.value = '';
+  beta.value = 60;
+  phi.value = 30;
+  setMode('beta');
+  compute();
+  const ic = document.getElementById('inputCard');
+  if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'});
+}
 }
 
   // 輸出單位（kgf / N）
@@ -1339,36 +1488,86 @@ function resetAll(){
   
   // Bind press feedback to key buttons (calc / reset / copy / close)
   [calcBtn, resetBtn, resetBtn2, copyBtn, closeA2hs, closeFirstUse].forEach(bindPressFeedback);
-resetBtn.addEventListener('click', resetAll);
-  if(resetBtn2) resetBtn2.addEventListener('click', ()=>{ resetAll(); showToast('已重設'); scrollToCard('inputCard'); });
 
-  compute();
+  // Press feedback (handfeel)
+  [calcBtn, resetBtn, resetBtn2, copyBtn, closeA2hs, closeFirstUse].forEach(bindPressFeedback);
+
+  
+// Reset buttons: short press = normal reset; long press (0.6s) = hard clear
+bindPressClass(resetBtn);
+bindPressClass(resetBtn2);
+
+bindSmartHold(resetBtn, ()=>{
+  resetAll();
+  showToast('已重設');
+}, ()=>{
+  hardClear();
+  showToast('已清空');
+}, 600);
+
+if(resetBtn2){
+  bindSmartHold(resetBtn2, ()=>{
+    resetAll();
+    showToast('已重設');
+    // iOS / WebView 有時會忽略 scrollIntoView：改用更穩的 scrollTo，並延後一拍
+    setTimeout(()=>{
+      const ic = document.getElementById('inputCard');
+      if(!ic) return;
+      const top = ic.getBoundingClientRect().top + window.scrollY - 12;
+      window.scrollTo({top, behavior:'smooth'});
+    }, 60);
+  }, ()=>{
+    hardClear();
+    showToast('已清空');
+    setTimeout(()=>{
+      const ic = document.getElementById('inputCard');
+      if(!ic) return;
+      const top = ic.getBoundingClientRect().top + window.scrollY - 12;
+      window.scrollTo({top, behavior:'smooth'});
+    }, 60);
+  }, 600);
+}
+
+compute();
   updateRiskTint();
   highlightAngleChips();
 
 
-// 微調角度（▲▼）
-function bindTap(el, fn){
-  if(!el) return;
-  // Click (desktop/most browsers)
-  el.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); fn(); });
-  // Pointer/touch (iOS / WebView reliability)
-  el.addEventListener('pointerup', (e)=>{ e.preventDefault(); e.stopPropagation(); fn(); }, {passive:false});
-  el.addEventListener('touchend', (e)=>{ e.preventDefault(); e.stopPropagation(); fn(); }, {passive:false});
+// 微調角度（▲▼）——加強版：避免 iOS/內建 WebView 吃掉 click
+function tapSafe(elm, fn){
+  if(!elm) return;
+  const run = (ev)=>{
+    try{ ev.preventDefault(); }catch(e){}
+    try{ ev.stopPropagation(); }catch(e){}
+    try{ ev.stopImmediatePropagation(); }catch(e){}
+    fn();
+  };
+  // click (desktop)
+  elm.addEventListener('click', run, {capture:true});
+  // pointer / touch (mobile)
+  elm.addEventListener('pointerup', run, {capture:true});
+  elm.addEventListener('touchend', run, {capture:true, passive:false});
+}
+
+function stepAngle(btn){
+  const targetId = btn.getAttribute('data-target');
+  const delta = Number(btn.getAttribute('data-delta') || 0);
+  const inp = document.getElementById(targetId);
+  if(!inp) return;
+  const step = Number(inp.step || 1) || 1;
+  const min = inp.min!=='' ? Number(inp.min) : -Infinity;
+  const max = inp.max!=='' ? Number(inp.max) : Infinity;
+  const cur = Number(inp.value || 0);
+  let next = cur + delta*step;
+  next = Math.min(max, Math.max(min, next));
+  inp.value = String(next);
+  inp.dispatchEvent(new Event('input', {bubbles:true}));
 }
 
 document.querySelectorAll('.stepBtn').forEach(btn=>{
-  const handler = ()=>{
-    const targetId = btn.getAttribute('data-target');
-    const delta = Number(btn.getAttribute('data-delta') || '0');
-    const input = document.getElementById(targetId);
-    if(!input) return;
-    const v = Number(input.value || 0) + delta;
-    input.value = String(Math.max(0, Math.min(180, v)));
-    calc();
-  };
-  bindTap(btn, handler);
+  tapSafe(btn, ()=>stepAngle(btn));
 });
+
 
 // 角度快捷鍵：按下就直接套用到輸入框
 document.querySelectorAll('.chip[data-angle]').forEach(chip=>{
