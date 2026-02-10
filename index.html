@@ -656,6 +656,26 @@
       box-shadow: 0 0 0 2px rgba(255,209,102,.12);
       background: rgba(255,209,102,.08);
     }
+
+    /* ===== Breathing hint when lamp is warn/bad (subtle, tool-like) ===== */
+    @keyframes breatheBad{
+      0%,100%{ box-shadow: 0 0 0 2px rgba(255,92,92,.10); }
+      50%{ box-shadow: 0 0 0 2px rgba(255,92,92,.22), 0 0 18px rgba(255,92,92,.12); }
+    }
+    @keyframes breatheWarn{
+      0%,100%{ box-shadow: 0 0 0 2px rgba(255,209,102,.08); }
+      50%{ box-shadow: 0 0 0 2px rgba(255,209,102,.18), 0 0 18px rgba(255,209,102,.10); }
+    }
+    .btn.dangerPulse{ animation: breatheBad 1.6s ease-in-out infinite; }
+    .btn.warnPulse{ animation: breatheWarn 1.8s ease-in-out infinite; }
+
+    /* ===== Long-press holding state ===== */
+    .btn.holding{
+      border-color: rgba(122,167,255,.75) !important;
+      background: rgba(122,167,255,.14) !important;
+      box-shadow: 0 0 0 2px rgba(122,167,255,.18), inset 0 0 0 1px rgba(255,255,255,.14) !important;
+    }
+
 </style>
 </head>
 <body>
@@ -1113,6 +1133,9 @@
     if(resetBtn2){
       resetBtn2.classList.toggle('dangerHint', warn.level === 'bad');
       resetBtn2.classList.toggle('warnHint', warn.level === 'warn');
+      // gentle breathing hint when lamp is not green
+      resetBtn2.classList.toggle('dangerPulse', warn.level === 'bad');
+      resetBtn2.classList.toggle('warnPulse', warn.level === 'warn');
     }
 
     const unitTxt = unitLabel();
@@ -1255,6 +1278,52 @@ function resetAll(){
   setMode('beta');
 }
 
+
+function clearAll(){
+  // Deep reset: clear inputs for a true restart
+  w.value = '';
+  beta.value = '';
+  phi.value = '';
+  unit.value = 'kgf';
+  // ensure unit buttons reflect
+  if(unitKgfBtn) unitKgfBtn.setAttribute('aria-pressed','true');
+  if(unitNBtn) unitNBtn.setAttribute('aria-pressed','false');
+
+  setMode('beta'); // also recompute + risk tint
+  renderInvalid('已清空，請重新輸入重量與角度');
+  const ic = document.getElementById('inputCard');
+  if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function attachLongPressClear(el){
+  if(!el) return;
+  let t = null;
+  const start = ()=>{
+    if(t) clearTimeout(t);
+    el.classList.add('holding');
+    t = setTimeout(()=>{
+      el.dataset.ignoreClick = '1';
+      el.classList.remove('holding');
+      try{ if(navigator.vibrate) navigator.vibrate(18); }catch(e){}
+      clearAll();
+    }, 600);
+  };
+  const end = ()=>{
+    if(t){ clearTimeout(t); t = null; }
+    el.classList.remove('holding');
+  };
+
+  el.addEventListener('pointerdown', start);
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointerleave', end);
+  el.addEventListener('pointercancel', end);
+
+  // iOS Safari fallback
+  el.addEventListener('touchstart', start, {passive:true});
+  el.addEventListener('touchend', end, {passive:true});
+  el.addEventListener('touchcancel', end, {passive:true});
+}
+
   // 輸出單位（kgf / N）
   if(unitKgfBtn) unitKgfBtn.addEventListener('click', ()=>setUnit('kgf'));
   if(unitNBtn)   unitNBtn.addEventListener('click', ()=>setUnit('N'));
@@ -1325,8 +1394,29 @@ function resetAll(){
   
   // Bind press feedback to key buttons (calc / reset / copy / close)
   [calcBtn, resetBtn, resetBtn2, copyBtn, closeA2hs, closeFirstUse].forEach(bindPressFeedback);
-resetBtn.addEventListener('click', resetAll);
-  if(resetBtn2) resetBtn2.addEventListener('click', ()=>{ resetAll(); showToast('已重設'); const ic = document.getElementById('inputCard'); if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'}); });
+
+// Long-press (0.6s) for a true clear restart (avoids accidental resets)
+attachLongPressClear(resetBtn);
+attachLongPressClear(resetBtn2);
+
+// Short tap: normal reset (keep your original reset near calculate)
+resetBtn.addEventListener('click', (e)=>{
+  if(resetBtn.dataset.ignoreClick === '1'){ resetBtn.dataset.ignoreClick = '0'; e.preventDefault(); return; }
+  resetAll();
+  try{ if(navigator.vibrate) navigator.vibrate(10); }catch(err){}
+});
+
+if(resetBtn2){
+  resetBtn2.addEventListener('click', (e)=>{
+    if(resetBtn2.dataset.ignoreClick === '1'){ resetBtn2.dataset.ignoreClick = '0'; e.preventDefault(); return; }
+    resetAll();
+    try{ if(navigator.vibrate) navigator.vibrate(10); }catch(err){}
+    const ic = document.getElementById('inputCard');
+    if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+}
+
+});
 
   compute();
   updateRiskTint();
