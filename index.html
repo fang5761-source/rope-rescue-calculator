@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>戰繩｜軌道繩張力估算 v1.1.3</title>
+<title>戰繩｜軌道繩張力估算 v1.2.0</title>
 <style>
 
     :root{
@@ -337,8 +337,10 @@
     .quickAngles{
       display:flex;
       gap:10px;
-      flex-wrap:wrap;
+      flex-wrap:nowrap;
       margin: 10px 0 8px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
     }
     .chip{
       appearance:none;
@@ -466,6 +468,22 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+
+    /* ====== Risk cues for quick angle chips (teaching rhythm) ====== */
+    .quickAngles{ scrollbar-width:none; }
+    .quickAngles::-webkit-scrollbar{ height:0; }
+    .chip.safe{border-color: rgba(120,210,170,.45); background: rgba(120,210,170,.10);}
+    .chip.warn{border-color: rgba(220,190,120,.45); background: rgba(220,190,120,.10);}
+    .chip.bad{border-color: rgba(230,150,120,.45); background: rgba(230,150,120,.10);}
+    .chip.active.safe{box-shadow: 0 0 0 2px rgba(120,210,170,.18) inset;}
+    .chip.active.warn{box-shadow: 0 0 0 2px rgba(220,190,120,.18) inset;}
+    .chip.active.bad{box-shadow: 0 0 0 2px rgba(230,150,120,.18) inset;}
+
+    /* Subtle result tint (no scare colors) */
+    #resultCard.safe{ box-shadow: 0 0 0 1px rgba(120,210,170,.10) inset; }
+    #resultCard.warn{ box-shadow: 0 0 0 1px rgba(220,190,120,.10) inset; }
+    #resultCard.bad{  box-shadow: 0 0 0 1px rgba(230,150,120,.10) inset; }
+
 </style>
 </head>
 <body>
@@ -490,7 +508,6 @@
 <h2 class="cardTitle">參數輸入</h2>
 <p class="sub">支援兩種角度表示：V 字夾角 β 或單側仰角 φ（相對水平）。</p>
 </div>
-<div class="modeTag modeInline" id="modeLabel">模式：角度用 β（V 字夾角）</div>
 </div>
 <div class="cardBody">
 <div class="row">
@@ -514,12 +531,13 @@
 <div class="hint">現場若都講「公斤」比較快，就用 kgf；要更標準就切到 N。</div>
 </div>
 </div>
+<div class="sub" style="margin: 0 0 6px;">角度設定</div>
 <div class="switch">
-<div class="btn primary" id="btnBeta">角度用 β（V 字夾角）</div>
-<div class="btn" id="btnPhi">角度用 φ（單側仰角）</div>
+<div class="btn primary" id="btnBeta">V 字夾角 β</div>
+<div class="btn" id="btnPhi">單側仰角 φ</div>
 </div>
 <div class="sliderWrap" id="betaBox">
-<label for="beta">V 字夾角 β（度）</label><div aria-label="角度快捷" class="quickAngles"><button class="chip" data-angle="30" data-mode="beta" type="button">β 30°</button><button class="chip" data-angle="45" data-mode="beta" type="button">β 45°</button><button class="chip" data-angle="60" data-mode="beta" type="button">β 60°</button><button class="chip" data-angle="90" data-mode="beta" type="button">β 90°</button><button class="chip" data-angle="120" data-mode="beta" type="button">β 120°</button><button class="chip" data-angle="150" data-mode="beta" type="button">β 150°</button></div>
+<label for="beta">V 字夾角 β（度）</label><div aria-label="角度快捷" class="quickAngles"><button class="chip safe" data-angle="30" data-mode="beta" type="button">β 30°</button><button class="chip safe" data-angle="45" data-mode="beta" type="button">β 45°</button><button class="chip warn" data-angle="60" data-mode="beta" type="button">β 60°</button><button class="chip warn" data-angle="90" data-mode="beta" type="button">β 90°</button><button class="chip bad" data-angle="120" data-mode="beta" type="button">β 120°</button><button class="chip bad" data-angle="150" data-mode="beta" type="button">β 150°</button></div>
 <div class="row angleRow">
   <div class="angleInput">
     <div class="numStepper">
@@ -535,7 +553,7 @@
 </div>
 </div>
 <div class="sliderWrap" id="phiBox" style="display:none;">
-<label for="phi">單側仰角 φ（度，相對水平）</label><div aria-label="角度快捷" class="quickAngles"><button class="chip" data-angle="15" data-mode="phi" type="button">φ 15°</button><button class="chip" data-angle="20" data-mode="phi" type="button">φ 20°</button><button class="chip" data-angle="30" data-mode="phi" type="button">φ 30°</button><button class="chip" data-angle="45" data-mode="phi" type="button">φ 45°</button><button class="chip" data-angle="60" data-mode="phi" type="button">φ 60°</button><button class="chip" data-angle="75" data-mode="phi" type="button">φ 75°</button></div>
+<label for="phi">單側仰角 φ（度，相對水平）</label><div aria-label="角度快捷" class="quickAngles"><button class="chip safe" data-angle="15" data-mode="phi" type="button">φ 15°</button><button class="chip safe" data-angle="20" data-mode="phi" type="button">φ 20°</button><button class="chip warn" data-angle="30" data-mode="phi" type="button">φ 30°</button><button class="chip warn" data-angle="45" data-mode="phi" type="button">φ 45°</button><button class="chip bad" data-angle="60" data-mode="phi" type="button">φ 60°</button><button class="chip bad" data-angle="75" data-mode="phi" type="button">φ 75°</button></div>
 <div class="row angleRow">
   <div class="angleInput">
     <div class="numStepper">
@@ -651,7 +669,7 @@
         AI 協作輔助／ChatGPT
       </div>
       <div class="hint">
-        <strong>版本</strong>：v1.1.4｜2026
+        <strong>版本</strong>：v1.2.0｜2026
       </div>
 </div>
   </details>
@@ -755,6 +773,8 @@
 
     const warn = evaluateWarning(betaDeg, phiDeg, ratio);
     renderWarning(warn, Wkg, betaDeg, phiDeg, T_display, ratio);
+
+    updateRiskTint();
   }
 
   function evaluateWarning(betaDeg, phiDeg, ratio){
@@ -817,12 +837,40 @@
   }
 
   
-  function setActiveChip(mode, val){
+  
+function updateRiskTint(){
+    const resultCard = document.getElementById('resultCard');
+    if(!resultCard) return;
+    resultCard.classList.remove('safe','warn','bad');
+    const a = (angleMode==='beta') ? Number(beta.value) : Number(phi.value);
+    let cls = 'warn';
+    if(angleMode==='beta'){
+      if(a<=45) cls='safe'; else if(a<=90) cls='warn'; else cls='bad';
+    }else{
+      if(a<=20) cls='safe'; else if(a<=45) cls='warn'; else cls='bad';
+    }
+    resultCard.classList.add(cls);
+  }
+
+function setActiveChip(mode, val){
     document.querySelectorAll('.chip').forEach(c=>{
       const m = c.getAttribute('data-mode');
       const a = parseFloat(c.getAttribute('data-angle'));
       c.classList.toggle('active', m === mode && a === val);
-    });
+    
+    // Risk tint for result card (teaching rhythm cue)
+    const resultCard = document.getElementById('resultCard');
+    if(resultCard){
+      resultCard.classList.remove('safe','warn','bad');
+      const active = document.querySelector(`.chip.active[data-mode="${mode}"][data-angle="${val}"]`);
+      if(active){
+        if(active.classList.contains('safe')) resultCard.classList.add('safe');
+        else if(active.classList.contains('warn')) resultCard.classList.add('warn');
+        else if(active.classList.contains('bad')) resultCard.classList.add('bad');
+      }
+    }
+
+  });
   }
 
   function applyQuickAngle(mode, val){
@@ -861,6 +909,7 @@ function setMode(mode){
         : '模式：角度用 φ（單側仰角）';
     }
     compute();
+    updateRiskTint();
   }
 
   function showToast(text){
