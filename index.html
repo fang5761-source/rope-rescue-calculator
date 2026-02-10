@@ -621,6 +621,20 @@
       #controlCard footer{margin-top: 12px;}
     }
 
+
+    /* ===== Button handfeel (tap feedback) ===== */
+    button.btn, button.segBtn, button.chip, button.wchip, button.stepBtn{
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .btn, .segBtn, .chip, .wchip, .stepBtn{
+      transition: transform .06s ease, background .12s ease, box-shadow .12s ease, border-color .12s ease;
+    }
+    .btn:active, .segBtn:active, .chip:active, .wchip:active, .stepBtn:active{
+      transform: translateY(1px) scale(.98);
+      box-shadow: 0 0 0 2px rgba(122,167,255,.18) inset;
+    }
+
 </style>
 </head>
 <body>
@@ -753,8 +767,8 @@
         <div class="hint">結果將以所選單位顯示。</div>
 
         <div class="twoBtns">
-          <div class="btn primary" id="calcBtn">計算</div>
-          <div class="btn" id="resetBtn">重設</div>
+          <button class="btn primary" id="calcBtn" type="button">計算</button>
+          <button class="btn" id="resetBtn" type="button">重設</button>
         </div>
 
         <footer>
@@ -815,7 +829,10 @@
 <div class="hint" style="margin-top:12px;">
             注意：<span class="mono">繩越水平，張力越爆。</span>
 </div>
-<div class="twoBtns" style="margin-top:14px;"><div class="btn primary" id="copyBtn">複製結果</div><div class="btn" id="resetBtn2">重設</div></div></div>
+<div class="twoBtns" style="margin-top:14px;">
+              <button class="btn primary" id="copyBtn" type="button">複製結果</button>
+              <button class="btn" id="resetBtn2" type="button">重設</button>
+            </div></div>
 </section>
 
 
@@ -836,7 +853,11 @@
       <div class="hint" style="margin-top:12px;">
         小提醒：<span class="mono">繩越水平，張力越爆衝。</span> 角度進入敏感區時，請優先改幾何並增加保守冗餘。
       </div>
-    </div>
+    
+      <div class="twoBtns" style="margin-top:14px; grid-template-columns:1fr;">
+        <button class="btn" id="closeFirstUse" type="button">收合</button>
+      </div>
+</div>
   </details>
 
   <details class="card" id="a2hs">
@@ -908,7 +929,6 @@
   </details>
 </div>
 
-<div class="toast" id="toast">已複製到剪貼簿</div>
 <script>
   const el = (id)=>document.getElementById(id);
 
@@ -941,7 +961,6 @@
   const calcBtn = el('calcBtn');
   const resetBtn = el('resetBtn');
   const resetBtn2 = el('resetBtn2');
-  const toast = el('toast');
 
   const unitKgfBtn = el('unitKgf');
   const unitNBtn   = el('unitN');
@@ -1161,10 +1180,8 @@ function setMode(mode){
   highlightAngleChips();
 }
 
-function showToast(text){
-  toast.textContent = text || "已複製到剪貼簿";
-  toast.classList.add('show');
-  setTimeout(()=>toast.classList.remove('show'), 1400);
+function showToast(_text){
+  try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){}
 }
 
 async function copyText(){
