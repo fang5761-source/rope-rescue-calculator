@@ -1,0 +1,20 @@
+{
+  "name": "軌道繩張力估算",
+  "short_name": "軌道繩張力估算",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#1f2f4a",
+  "theme_color": "#1f2f4a",
+  "icons": [
+    {
+      "src": "icon_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
