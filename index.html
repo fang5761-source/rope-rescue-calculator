@@ -1235,6 +1235,22 @@ function showToast(_text){
   try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){}
 }
 
+function scrollToInputCard(){
+  const ic = document.getElementById('inputCard');
+  if(!ic) return;
+  // 1) 最保險：改 hash（在 iOS/LINE WebView 常比 scrollIntoView 穩）
+  try{ location.hash = '#inputCard'; }catch(e){}
+  // 2) 再補一刀：用 scrollTo 依卡片實際位置微調（避免被固定 padding 吃掉）
+  const doScroll = ()=>{
+    const top = ic.getBoundingClientRect().top + window.scrollY - 12;
+    try{ window.scrollTo({top, behavior:'smooth'}); }
+    catch(e){ window.scrollTo(0, top); }
+  };
+  // 立即 + 下一拍各做一次，避免 iOS 偶發忽略
+  doScroll();
+  setTimeout(doScroll, 80);
+}
+
 // ===== Forced press feedback (iOS-safe) =====
 function bindPressFeedback(el){
   if(!el) return;
@@ -1509,22 +1525,11 @@ if(resetBtn2){
   bindSmartHold(resetBtn2, ()=>{
     resetAll();
     showToast('已重設');
-    // iOS / WebView 有時會忽略 scrollIntoView：改用更穩的 scrollTo，並延後一拍
-    setTimeout(()=>{
-      const ic = document.getElementById('inputCard');
-      if(!ic) return;
-      const top = ic.getBoundingClientRect().top + window.scrollY - 12;
-      window.scrollTo({top, behavior:'smooth'});
-    }, 60);
+    scrollToInputCard();
   }, ()=>{
     hardClear();
     showToast('已清空');
-    setTimeout(()=>{
-      const ic = document.getElementById('inputCard');
-      if(!ic) return;
-      const top = ic.getBoundingClientRect().top + window.scrollY - 12;
-      window.scrollTo({top, behavior:'smooth'});
-    }, 60);
+    scrollToInputCard();
   }, 600);
 }
 
@@ -1533,41 +1538,46 @@ compute();
   highlightAngleChips();
 
 
-// 微調角度（▲▼）——加強版：避免 iOS/內建 WebView 吃掉 click
-function tapSafe(elm, fn){
-  if(!elm) return;
-  const run = (ev)=>{
-    try{ ev.preventDefault(); }catch(e){}
-    try{ ev.stopPropagation(); }catch(e){}
-    try{ ev.stopImmediatePropagation(); }catch(e){}
-    fn();
-  };
-  // click (desktop)
-  elm.addEventListener('click', run, {capture:true});
-  // pointer / touch (mobile)
-  elm.addEventListener('pointerup', run, {capture:true});
-  elm.addEventListener('touchend', run, {capture:true, passive:false});
-}
-
-function stepAngle(btn){
-  const targetId = btn.getAttribute('data-target');
-  const delta = Number(btn.getAttribute('data-delta') || 0);
+// 微調角度（▲▼）——超保險版：iOS / LINE WebView 也能穩定加減
+function stepAngleBy(targetId, delta){
   const inp = document.getElementById(targetId);
   if(!inp) return;
   const step = Number(inp.step || 1) || 1;
-  const min = inp.min!=='' ? Number(inp.min) : -Infinity;
-  const max = inp.max!=='' ? Number(inp.max) : Infinity;
+  const min = (inp.min !== '') ? Number(inp.min) : -Infinity;
+  const max = (inp.max !== '') ? Number(inp.max) : Infinity;
   const cur = Number(inp.value || 0);
-  let next = cur + delta*step;
+  let next = cur + delta * step;
   next = Math.min(max, Math.max(min, next));
   inp.value = String(next);
   inp.dispatchEvent(new Event('input', {bubbles:true}));
 }
 
-document.querySelectorAll('.stepBtn').forEach(btn=>{
-  tapSafe(btn, ()=>stepAngle(btn));
-});
+function bindStepBtn(btn){
+  if(!btn) return;
+  const targetId = btn.getAttribute('data-target');
+  const delta = Number(btn.getAttribute('data-delta') || 0);
 
+  // 先擋掉 WebView 把點擊當成「滾動/選取」的怪行為
+  const guard = (ev)=>{
+    try{ ev.preventDefault(); }catch(e){}
+    try{ ev.stopPropagation(); }catch(e){}
+  };
+  btn.addEventListener('touchstart', guard, {passive:false});
+  btn.addEventListener('pointerdown', guard, {passive:false});
+  btn.addEventListener('mousedown', guard);
+
+  // 真正執行放在 click（最穩），同時再補 touchend（有些 WebView 不派 click）
+  const run = (ev)=>{
+    try{ ev.preventDefault(); }catch(e){}
+    try{ ev.stopPropagation(); }catch(e){}
+    stepAngleBy(targetId, delta);
+  };
+  btn.addEventListener('click', run);
+  btn.addEventListener('touchend', run, {passive:false});
+  btn.addEventListener('pointerup', run);
+}
+
+document.querySelectorAll('.stepBtn').forEach(bindStepBtn);
 
 // 角度快捷鍵：按下就直接套用到輸入框
 document.querySelectorAll('.chip[data-angle]').forEach(chip=>{
