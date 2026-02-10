@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>戰繩｜軌道繩張力估算 v1.2.2</title>
+<title>戰繩｜軌道繩張力估算 v1.2.3</title>
 <style>
 
     :root{
@@ -736,7 +736,7 @@
         AI 協作輔助／ChatGPT
       </div>
 <div class="hint">
-<strong>版本</strong>：v1.2.2｜2026
+<strong>版本</strong>：v1.2.3｜2026
       </div>
 </div>
 <details class="card" id="firstUse">
@@ -959,116 +959,97 @@
 
   
   
+
 function updateRiskTint(){
-    const resultCard = document.getElementById('resultCard');
-    if(!resultCard) return;
-    resultCard.classList.remove('safe','warn','bad');
-    const a = (angleMode==='beta') ? Number(beta.value) : Number(phi.value);
+  const resultCard = document.getElementById('resultCard');
+  if(!resultCard) return;
+  resultCard.classList.remove('safe','warn','bad');
+
+  if(angleMode === 'beta'){
+    const b = Number(beta.value);
+    // β 小：較垂直（較保守）；β 大：越水平（越危險）
     let cls = 'warn';
-    if(angleMode==='beta'){
-      if(a<=45) cls='safe'; else if(a<=90) cls='warn'; else cls='bad';
-    }else{
-      if(a<=20) cls='safe'; else if(a<=45) cls='warn'; else cls='bad';
-    }
+    if(b <= 60) cls = 'safe';
+    else if(b <= 120) cls = 'warn';
+    else cls = 'bad';
+    resultCard.classList.add(cls);
+  }else{
+    const p = Number(phi.value);
+    // φ 大：較垂直（較保守）；φ 小：越水平（越危險）
+    let cls = 'warn';
+    if(p >= 45) cls = 'safe';
+    else if(p >= 30) cls = 'warn';
+    else cls = 'bad';
     resultCard.classList.add(cls);
   }
+}
 
-function setActiveChip(mode, val){
-    document.querySelectorAll('.chip').forEach(c=>{
-      const m = c.getAttribute('data-mode');
-      const a = parseFloat(c.getAttribute('data-angle'));
-      c.classList.toggle('active', m === mode && a === val);
-    
-    // Risk tint for result card (teaching rhythm cue)
-    const resultCard = document.getElementById('resultCard');
-    if(resultCard){
-      resultCard.classList.remove('safe','warn','bad');
-      const active = document.querySelector(`.chip.active[data-mode="${mode}"][data-angle="${val}"]`);
-      if(active){
-        if(active.classList.contains('safe')) resultCard.classList.add('safe');
-        else if(active.classList.contains('warn')) resultCard.classList.add('warn');
-        else if(active.classList.contains('bad')) resultCard.classList.add('bad');
-      }
-    }
-
+function highlightAngleChips(){
+  document.querySelectorAll('.chip[data-angle]').forEach(c=>{
+    const mode = c.getAttribute('data-mode');
+    const ang = Number(c.getAttribute('data-angle'));
+    const current = (mode === 'beta') ? Number(beta.value) : Number(phi.value);
+    c.classList.toggle('active', mode === angleMode && ang === current);
   });
-  }
-
-  function applyQuickAngle(mode, val){
-    // 只在需要時切換模式，避免視覺上「一直跳來跳去」
-    if(mode !== angleMode){
-      setMode(mode);
-    }
-    if(mode === 'beta'){
-      beta.value = val;
-      betaRange.value = val;
-    }else{
-      phi.value = val;
-      phiRange.value = val;
-    }
-    setActiveChip(mode, val);
-    compute();
-  }
+}
 
 function setMode(mode){
-    angleMode = mode;
-    if(mode === 'beta'){
-      btnBeta.classList.add('primary');
-      btnPhi.classList.remove('primary');
-      betaBox.style.display = '';
-      phiBox.style.display = 'none';
-    }else{
-      btnPhi.classList.add('primary');
-      btnBeta.classList.remove('primary');
-      betaBox.style.display = 'none';
-      phiBox.style.display = '';
-    }
-
-    if(modeLabel){
-      modeLabel.textContent = (mode === 'beta')
-        ? '模式：角度用 β（V 字夾角）'
-        : '模式：角度用 φ（單側仰角）';
-    }
-    compute();
-    updateRiskTint();
+  angleMode = mode;
+  if(mode === 'beta'){
+    btnBeta.classList.add('primary');
+    btnPhi.classList.remove('primary');
+    betaBox.style.display = '';
+    phiBox.style.display = 'none';
+  }else{
+    btnPhi.classList.add('primary');
+    btnBeta.classList.remove('primary');
+    betaBox.style.display = 'none';
+    phiBox.style.display = '';
   }
 
-  function showToast(text){
-    toast.textContent = text || "已複製到剪貼簿";
-    toast.classList.add('show');
-    setTimeout(()=>toast.classList.remove('show'), 1400);
+  if(modeLabel){
+    modeLabel.textContent = (mode === 'beta')
+      ? '模式：角度用 β（V 字夾角）'
+      : '模式：角度用 φ（單側仰角）';
   }
+  compute();
+  updateRiskTint();
+  highlightAngleChips();
+}
 
-  async function copyText(){
-    const txt = (hiddenText || "").trim();
-    if(!txt){
-      showToast("沒有可複製內容");
-      return;
-    }
-    try{
-      await navigator.clipboard.writeText(txt);
-      showToast("已複製到剪貼簿");
-    }catch(e){
-      const ta = document.createElement('textarea');
-      ta.value = txt;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-      showToast("已複製（備援模式）");
-    }
+function showToast(text){
+  toast.textContent = text || "已複製到剪貼簿";
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'), 1400);
+}
+
+async function copyText(){
+  const txt = (hiddenText || "").trim();
+  if(!txt){
+    showToast("沒有可複製內容");
+    return;
   }
-
-  function resetAll(){
-    w.value = 150;
-    unit.value = 'kgf';
-    beta.value = 60;
-    beta.value = 60;
-    phi.value = 30;
-    phi.value = 30;
-    setMode('beta');
+  try{
+    await navigator.clipboard.writeText(txt);
+    showToast("已複製到剪貼簿");
+  }catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = txt;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast("已複製（備援模式）");
   }
+}
 
+function resetAll(){
+  w.value = 150;
+  unit.value = 'kgf';
+  beta.value = 60;
+  phi.value = 30;
+  setMode('beta');
+}
 
   // 輸出單位（kgf / N）
   if(unitKgfBtn) unitKgfBtn.addEventListener('click', ()=>setUnit('kgf'));
@@ -1083,19 +1064,33 @@ function setMode(mode){
     });
   });
 
+  // 角度模式切換
   btnBeta.addEventListener('click', ()=>setMode('beta'));
   btnPhi.addEventListener('click', ()=>setMode('phi'));
 
-  [w, unit, beta, phi].forEach(x=>{
-    x.addEventListener('input', ()=>{ compute(); });
+  // 角度快捷鍵（按下就套用；必要時切換模式）
+  document.querySelectorAll('.chip[data-angle]').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      const mode = chip.getAttribute('data-mode');
+      const ang = Number(chip.getAttribute('data-angle'));
+      if(mode !== angleMode) setMode(mode);
+      const target = (mode === 'phi') ? phi : beta;
+      target.value = String(ang);
+      target.dispatchEvent(new Event('input', {bubbles:true}));
+      highlightAngleChips();
+    });
   });
 
-copyBtn.addEventListener('click', copyText);
+  // 即時計算
+  [w, unit, beta, phi].forEach(x=>{
+    x.addEventListener('input', ()=>{ compute(); updateRiskTint(); highlightAngleChips(); });
+  });
+
+  copyBtn.addEventListener('click', copyText);
 
   // 計算（保留即時計算，但給「手感」按鍵）
   calcBtn.addEventListener('click', ()=>{
     compute();
-    // 捲到結果區
     const rc = document.getElementById('resultCard');
     if(rc) rc.scrollIntoView({behavior:'smooth', block:'start'});
     showToast('已計算');
@@ -1104,7 +1099,8 @@ copyBtn.addEventListener('click', copyText);
   resetBtn.addEventListener('click', resetAll);
 
   compute();
-  setActiveChip('beta', parseFloat(beta.value));
+  updateRiskTint();
+  highlightAngleChips();
 
 
 // 微調角度（▲▼）
