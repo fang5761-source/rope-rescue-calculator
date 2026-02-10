@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>戰繩｜軌道繩張力估算 v1.2.0</title>
+<title>戰繩｜軌道繩張力估算 v1.2.2</title>
 <style>
 
     :root{
@@ -358,7 +358,70 @@
       background: rgba(122,167,255,.12);
     }
 
-    /* ===== Collapsible info cards ===== */
+    
+
+    /* ===== Segmented buttons (unit) ===== */
+    .seg{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      margin-top: 6px;
+      margin-bottom: 8px;
+    }
+    .segBtn{
+      width:100%;
+      justify-content:center;
+      border-radius:14px;
+      padding:12px 14px;
+      font-weight:900;
+      font-size:15px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.02);
+      color:var(--text);
+      cursor:pointer;
+      user-select:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .segBtn.primary{
+      border-color: rgba(122,167,255,.55);
+      background: rgba(122,167,255,.12);
+    }
+
+    /* ===== Weight quick keys ===== */
+    .quickWeights{
+      display:flex;
+      gap:10px;
+      flex-wrap:nowrap;          /* do not wrap */
+      margin: 10px 0 0;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    .quickWeights::-webkit-scrollbar{ height:0; }
+    .wchip{
+      appearance:none;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.02);
+      color: rgba(232,238,247,.9);
+      padding:10px 12px;
+      border-radius: 999px;
+      font-size:14px;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    .wchip:active{transform: translateY(1px);}
+
+    /* ===== Section label (treat like input header) ===== */
+    .sectionLabel{
+      margin: 6px 0 8px;
+      font-weight:900;
+      font-size:15px;
+      color: rgba(232,238,247,.82);
+      letter-spacing:.2px;
+    }
+/* ===== Collapsible info cards ===== */
     details.card{overflow:hidden;}
     details.card > summary{
       list-style:none;
@@ -513,25 +576,30 @@
 <div class="row">
 <div>
 <label for="w">總重量 W（kg）</label>
-<input id="w" min="0" step="0.1" type="number" value="120"/>
-<div class="hint">包含：傷患 + 擔架 + 協助手 + 裝備（只要掛在系統上的都算進來）。</div>
+<div class="hint" style="margin-top:0">包含：傷患 + 擔架 + 協助手 + 裝備（只要掛在系統上的都算進來）。</div>
+<input id="w" min="0" step="0.1" type="number" value="150"/>
+<div aria-label="重量快捷鍵" class="quickWeights" role="group">
+<button class="wchip" data-w-action="add" data-w-value="25" type="button">+25</button>
+<button class="wchip" data-w-action="add" data-w-value="50" type="button">+50</button>
+<button class="wchip" data-w-action="set" data-w-value="100" type="button">100</button>
+<button class="wchip" data-w-action="set" data-w-value="200" type="button">200</button>
+<button class="wchip" data-w-action="reset" data-w-value="150" type="button">↺150</button>
+</div>
 </div>
 <div>
-
 <label for="unit">輸出單位</label>
-<div class="seg" role="group" aria-label="輸出單位">
-  <button type="button" class="segBtn primary" id="unitKgf">kgf</button>
-  <button type="button" class="segBtn" id="unitN">N</button>
+<div aria-label="輸出單位" class="seg" role="group">
+<button class="segBtn primary" id="unitKgf" type="button">kgf</button>
+<button class="segBtn" id="unitN" type="button">N</button>
 </div>
 <select id="unit" style="display:none">
-  <option value="kgf" selected>kgf（公斤力）</option>
-  <option value="N">N（牛頓）</option>
+<option selected="" value="kgf">kgf（公斤力）</option>
+<option value="N">N（牛頓）</option>
 </select>
-
-<div class="hint">現場若都講「公斤」比較快，就用 kgf；要更標準就切到 N。</div>
+<div class="hint">結果將以所選單位顯示。</div>
 </div>
 </div>
-<div class="sub" style="margin: 0 0 6px;">角度設定</div>
+<div class="sectionLabel">角度設定</div>
 <div class="switch">
 <div class="btn primary" id="btnBeta">V 字夾角 β</div>
 <div class="btn" id="btnPhi">單側仰角 φ</div>
@@ -539,41 +607,41 @@
 <div class="sliderWrap" id="betaBox">
 <label for="beta">V 字夾角 β（度）</label><div aria-label="角度快捷" class="quickAngles"><button class="chip safe" data-angle="30" data-mode="beta" type="button">β 30°</button><button class="chip safe" data-angle="45" data-mode="beta" type="button">β 45°</button><button class="chip warn" data-angle="60" data-mode="beta" type="button">β 60°</button><button class="chip warn" data-angle="90" data-mode="beta" type="button">β 90°</button><button class="chip bad" data-angle="120" data-mode="beta" type="button">β 120°</button><button class="chip bad" data-angle="150" data-mode="beta" type="button">β 150°</button></div>
 <div class="row angleRow">
-  <div class="angleInput">
-    <div class="numStepper">
-      <input id="beta" min="1" max="179" step="1" type="number" value="120"/>
-      <div class="stepBtns" aria-label="角度微調">
-        <button type="button" class="stepBtn" data-target="beta" data-delta="1" aria-label="β 加 1 度">▲</button>
-        <button type="button" class="stepBtn" data-target="beta" data-delta="-1" aria-label="β 減 1 度">▼</button>
-      </div>
-    </div>
-    <div class="hint">β 越大 → 繩越「水平」 → 張力越爆衝。</div>
-  </div>
+<div class="angleInput">
+<div class="numStepper">
+<input id="beta" max="179" min="1" step="1" type="number" value="60"/>
+<div aria-label="角度微調" class="stepBtns">
+<button aria-label="β 加 1 度" class="stepBtn" data-delta="1" data-target="beta" type="button">▲</button>
+<button aria-label="β 減 1 度" class="stepBtn" data-delta="-1" data-target="beta" type="button">▼</button>
+</div>
+</div>
+<div class="hint">β 越大 → 繩越「水平」 → 張力越爆衝。</div>
+</div>
 </div>
 </div>
 </div>
 <div class="sliderWrap" id="phiBox" style="display:none;">
 <label for="phi">單側仰角 φ（度，相對水平）</label><div aria-label="角度快捷" class="quickAngles"><button class="chip safe" data-angle="15" data-mode="phi" type="button">φ 15°</button><button class="chip safe" data-angle="20" data-mode="phi" type="button">φ 20°</button><button class="chip warn" data-angle="30" data-mode="phi" type="button">φ 30°</button><button class="chip warn" data-angle="45" data-mode="phi" type="button">φ 45°</button><button class="chip bad" data-angle="60" data-mode="phi" type="button">φ 60°</button><button class="chip bad" data-angle="75" data-mode="phi" type="button">φ 75°</button></div>
 <div class="row angleRow">
-  <div class="angleInput">
-    <div class="numStepper">
-      <input id="phi" min="1" max="89" step="1" type="number" value="30"/>
-      <div class="stepBtns" aria-label="角度微調">
-        <button type="button" class="stepBtn" data-target="phi" data-delta="1" aria-label="φ 加 1 度">▲</button>
-        <button type="button" class="stepBtn" data-target="phi" data-delta="-1" aria-label="φ 減 1 度">▼</button>
-      </div>
-    </div>
-    <div class="hint">φ 越大 → 繩越「垂直」 → 張力越接近 W/2（較保守）。</div>
-  </div>
+<div class="angleInput">
+<div class="numStepper">
+<input id="phi" max="89" min="1" step="1" type="number" value="30"/>
+<div aria-label="角度微調" class="stepBtns">
+<button aria-label="φ 加 1 度" class="stepBtn" data-delta="1" data-target="phi" type="button">▲</button>
+<button aria-label="φ 減 1 度" class="stepBtn" data-delta="-1" data-target="phi" type="button">▼</button>
+</div>
+</div>
+<div class="hint">φ 越大 → 繩越「垂直」 → 張力越接近 W/2（較保守）。</div>
 </div>
 </div>
 </div>
+</section></div>
 <div class="twoBtns"><div class="btn primary" id="calcBtn">計算</div><div class="btn" id="resetBtn">重設</div></div>
 <footer>
             計算模型假設：對稱 V 角、受力點在中間、兩側張力相同。若是「受力點偏一側」的不對稱狀況，需要再加入角度參數。
           </footer>
 </div>
-</section>
+
 <!-- Result Card -->
 <section class="card" id="resultCard">
 <div class="cardHead">
@@ -626,27 +694,27 @@
 </div>
 <div class="twoBtns" style="margin-top:14px;"><div class="btn primary" id="copyBtn">複製結果</div></div></div>
 </section>
-</div>
-</div>
+
+
 <div class="infoStack">
-  <details class="card" id="a2hs">
-    <summary class="cardHead summaryHead">
-      <div style="min-width:0">
-        <h2 class="cardTitle">加入主畫面（選用）</h2></div></summary>
-    <div class="cardBody">
-      <div class="hint" style="margin-top:0">
+<details class="card" id="a2hs">
+<summary class="cardHead summaryHead">
+<div style="min-width:0">
+<h2 class="cardTitle">加入主畫面（選用）</h2></div></summary>
+<div class="cardBody">
+<div class="hint" style="margin-top:0">
         你可以直接點開連結使用，不一定要加入主畫面。<br/>
         如果希望之後開啟更方便，可以依照下面步驟將捷徑加入主畫面。
       </div>
-      <div class="hint">
-        <strong>iOS（iPhone）</strong><br/>
+<div class="hint">
+<strong>iOS（iPhone）</strong><br/>
         1. 點開連結（可直接從 LINE 開啟）<br/>
         2. 點選下方的「分享」圖示，往下滑<br/>
         3. 選擇「加入主畫面」<br/>
         4. 點選「加入」，即可將捷徑加到主畫面
       </div>
-      <div class="hint">
-        <strong>Android（Samsung、其他 Android 手機）</strong><br/>
+<div class="hint">
+<strong>Android（Samsung、其他 Android 手機）</strong><br/>
         1. 點開連結（可直接從 LINE 開啟）<br/>
         2. 點選畫面右下角的「⋮」<br/>
         3. 選擇「使用預設瀏覽器開啟」<br/>
@@ -654,28 +722,57 @@
         5. 往下滑，選擇「加到主畫面」<br/>
         6. 點選「新增」，即可將捷徑加到主畫面
       </div>
-    </div>
-  </details>
-
-  <details class="card" id="devinfo">
-    <summary class="cardHead summaryHead">
-      <div style="min-width:0">
-        <h2 class="cardTitle">開發與版本資訊</h2></div></summary>
-    <div class="cardBody">
-      <div class="hint" style="margin-top:0">
+</div>
+</details>
+<details class="card" id="devinfo">
+<summary class="cardHead summaryHead">
+<div style="min-width:0">
+<h2 class="cardTitle">開發與版本資訊</h2></div></summary>
+<div class="cardBody">
+<div class="hint" style="margin-top:0">
         本工具由 <strong>散木團隊</strong> 開發製作<br/>
         教學架構與工程判斷／徐世豐<br/>
         工具設計與互動介面／吳佩芳（朵朵）<br/>
         AI 協作輔助／ChatGPT
       </div>
-      <div class="hint">
-        <strong>版本</strong>：v1.2.0｜2026
+<div class="hint">
+<strong>版本</strong>：v1.2.2｜2026
       </div>
 </div>
-  </details>
+<details class="card" id="firstUse">
+<summary class="cardHead summaryHead">
+<div style="min-width:0">
+<h2 class="cardTitle">第一次使用？請看這裡</h2>
 </div>
-
-<div class="toast id="toast">已複製到剪貼簿</div>
+</summary>
+<div class="cardBody">
+<div class="hint" style="margin-top:0">
+        (1) 先輸入「總重量 W」：包含傷患、擔架、協助手與所有掛在系統上的裝備。<br/>
+        (2) 選擇角度表示法：V 字夾角 β 或單側仰角 φ（相對水平）。<br/>
+        (3) 選擇輸出單位：現場口語可用 kgf；要標準就切到 N。<br/>
+        (4) 按「計算」會自動捲到結果區，方便現場快速確認。
+      </div>
+<div class="hint">
+        小提醒：<span class="mono">繩越水平，張力越爆衝。</span> 角度進入敏感區時，請優先改幾何與增加保守冗餘。
+      </div>
+</div>
+</details>
+</details>
+<details class="card" id="disclaimer">
+<summary class="cardHead summaryHead">
+<div style="min-width:0">
+<h2 class="cardTitle">教學使用聲明</h2>
+</div>
+</summary>
+<div class="cardBody">
+<div class="hint" style="margin-top:0">
+        1) 本工具為「教學與判斷輔助」用途，提供張力估算與風險提示，非安全保證。<br/>
+        2) 現場仍應以 SOP、器材規格、固定點強度、角度/摩擦/動態因素與指揮判斷為準。<br/>
+        3) 若條件不明或存在高風險（人員、設備、環境），請採取更保守的配置與冗餘保護。
+      </div>
+</div>
+</details></div>
+<div class="toast" id="toast">已複製到剪貼簿</div>
 <script>
   const el = (id)=>document.getElementById(id);
 
@@ -709,6 +806,10 @@
   const resetBtn = el('resetBtn');
   const toast = el('toast');
 
+  const unitKgfBtn = el('unitKgf');
+  const unitNBtn   = el('unitN');
+
+
   let angleMode = 'beta';
   let hiddenText = "";
 
@@ -723,6 +824,26 @@
   }
   function unitLabel(){ return unit.value === 'N' ? 'N' : 'kgf'; }
 
+  function setUnit(next){
+    unit.value = (next === 'N') ? 'N' : 'kgf';
+    if(unitKgfBtn && unitNBtn){
+      unitKgfBtn.classList.toggle('primary', unit.value !== 'N');
+      unitNBtn.classList.toggle('primary', unit.value === 'N');
+    }
+    compute();
+  }
+
+  function setWeightFromQuick(action, v){
+    const cur = parseFloat(w.value || '0');
+    const val = Number(v);
+    let next = cur;
+    if(action === 'add') next = (isFinite(cur)?cur:0) + val;
+    else if(action === 'set') next = val;
+    else if(action === 'reset') next = val;
+    next = Math.max(0, next);
+    w.value = String(next);
+    w.dispatchEvent(new Event('input', {bubbles:true}));
+  }
   function compute(){
     const Wkg = parseFloat(w.value);
     if(!isFinite(Wkg) || Wkg <= 0){
@@ -939,14 +1060,28 @@ function setMode(mode){
   }
 
   function resetAll(){
-    w.value = 120;
+    w.value = 150;
     unit.value = 'kgf';
-    beta.value = 120;
-    beta.value = 120;
+    beta.value = 60;
+    beta.value = 60;
     phi.value = 30;
     phi.value = 30;
     setMode('beta');
   }
+
+
+  // 輸出單位（kgf / N）
+  if(unitKgfBtn) unitKgfBtn.addEventListener('click', ()=>setUnit('kgf'));
+  if(unitNBtn)   unitNBtn.addEventListener('click', ()=>setUnit('N'));
+
+  // 總重量快捷鍵（同一排、不換行）
+  document.querySelectorAll('.wchip[data-w-action]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const action = b.getAttribute('data-w-action');
+      const val = b.getAttribute('data-w-value');
+      setWeightFromQuick(action, val);
+    });
+  });
 
   btnBeta.addEventListener('click', ()=>setMode('beta'));
   btnPhi.addEventListener('click', ()=>setMode('phi'));
@@ -1009,19 +1144,3 @@ document.querySelectorAll('.chip[data-angle]').forEach(chip=>{
 </script>
 </body>
 </html>
-  <details class="card" id="disclaimer">
-    <summary class="cardHead summaryHead">
-      <div style="min-width:0">
-        <h2 class="cardTitle">教學使用聲明</h2>
-      </div>
-    </summary>
-    <div class="cardBody">
-      <div class="hint" style="margin-top:0">
-        1) 本工具為「教學與判斷輔助」用途，提供張力估算與風險提示，非安全保證。<br/>
-        2) 現場仍應以 SOP、器材規格、固定點強度、角度/摩擦/動態因素與指揮判斷為準。<br/>
-        3) 若條件不明或存在高風險（人員、設備、環境），請採取更保守的配置與冗餘保護。
-      </div>
-    </div>
-  </details>
-
-
