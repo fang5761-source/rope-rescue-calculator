@@ -1338,6 +1338,24 @@ async function copyText(){
   }
 }
 
+
+function scrollToInputCard(){
+  const ic = document.getElementById('inputCard');
+  if(!ic) return;
+  // Prefer scrollIntoView, with a tiny delay for iOS WebView reliability
+  try{
+    ic.scrollIntoView({behavior:'smooth', block:'start'});
+    setTimeout(()=>{
+      try{ ic.scrollIntoView({behavior:'smooth', block:'start'}); }catch(e){}
+    }, 60);
+  }catch(e){
+    try{
+      const top = ic.getBoundingClientRect().top + window.pageYOffset - 12;
+      window.scrollTo({top, behavior:'smooth'});
+    }catch(_e){}
+  }
+}
+
 function resetAll(){
   w.value = 150;
   unit.value = 'kgf';
@@ -1413,8 +1431,7 @@ function hardClear(){
   phi.value = 30;
   setMode('beta');
   compute();
-  const ic = document.getElementById('inputCard');
-  if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'});
+  scrollToInputCard();
 }
 }
 
@@ -1509,13 +1526,11 @@ if(resetBtn2){
   bindSmartHold(resetBtn2, ()=>{
     resetAll();
     showToast('已重設');
-    const ic = document.getElementById('inputCard');
-    if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'});
+    scrollToInputCard();
   }, ()=>{
     hardClear();
     showToast('已清空');
-    const ic = document.getElementById('inputCard');
-    if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'});
+    scrollToInputCard();
   }, 600);
 }
 
@@ -1525,23 +1540,31 @@ compute();
 
 
 // 微調角度（▲▼）
+function stepAdjust(btn){
+  const targetId = btn.getAttribute('data-target');
+  const delta = Number(btn.getAttribute('data-delta') || 0);
+  const inp = document.getElementById(targetId);
+  if(!inp) return;
+  const step = Number(inp.step || 1) || 1;
+  const min = inp.min!=='' ? Number(inp.min) : -Infinity;
+  const max = inp.max!=='' ? Number(inp.max) : Infinity;
+  const cur = Number(inp.value || 0);
+  let next = cur + delta*step;
+  next = Math.min(max, Math.max(min, next));
+  inp.value = String(next);
+  inp.dispatchEvent(new Event('input', {bubbles:true}));
+  updateRiskTint();
+  highlightAngleChips();
+}
 document.querySelectorAll('.stepBtn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    const targetId = btn.getAttribute('data-target');
-    const delta = Number(btn.getAttribute('data-delta') || 0);
-    const el = document.getElementById(targetId);
-    if(!el) return;
-    const step = Number(el.step || 1) || 1;
-    const min = el.min!=='' ? Number(el.min) : -Infinity;
-    const max = el.max!=='' ? Number(el.max) : Infinity;
-    const cur = Number(el.value || 0);
-    let next = cur + delta*step;
-    next = Math.min(max, Math.max(min, next));
-    el.value = String(next);
-    el.dispatchEvent(new Event('input', {bubbles:true}));
-  });
+  // iOS/Android webviews are sometimes flaky on click; bind pointer/touch end too.
+  btn.addEventListener('click', ()=>stepAdjust(btn));
+  if(window.PointerEvent){
+    btn.addEventListener('pointerup', ()=>stepAdjust(btn), {passive:true});
+  }else{
+    btn.addEventListener('touchend', ()=>stepAdjust(btn), {passive:true});
+  }
 });
-
 // 角度快捷鍵：按下就直接套用到輸入框
 document.querySelectorAll('.chip[data-angle]').forEach(chip=>{
   chip.addEventListener('click', ()=>{
