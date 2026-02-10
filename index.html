@@ -657,18 +657,27 @@
       background: rgba(255,209,102,.08);
     }
 
-    /* ===== Long-press reset + breathe hint (v1.2.5 fixed8) ===== */
-    @keyframes breatheWarn{
-      0%,100%{ box-shadow: 0 0 0 2px rgba(255,209,102,.10); filter: brightness(1); }
-      50%{ box-shadow: 0 0 0 3px rgba(255,209,102,.22); filter: brightness(1.08); }
+    /* ===== Button press feedback (reliable on iOS) ===== */
+    .press{
+      border-color: rgba(122,167,255,.95) !important;
+      background: rgba(122,167,255,.18) !important;
+      box-shadow:
+        0 0 0 2px rgba(122,167,255,.32),
+        inset 0 0 0 1px rgba(255,255,255,.18);
+      transform: translateY(1px);
     }
-    @keyframes breatheBad{
-      0%,100%{ box-shadow: 0 0 0 2px rgba(255,92,92,.10); filter: brightness(1); }
-      50%{ box-shadow: 0 0 0 3px rgba(255,92,92,.22); filter: brightness(1.10); }
+
+    /* ===== Reset pulse cue (only when 黃/紅燈) ===== */
+    @keyframes pulseWarn{
+      0%,100%{ box-shadow: 0 0 0 0 rgba(255,209,102,.00); border-color: rgba(255,209,102,.35); }
+      50%{    box-shadow: 0 0 0 6px rgba(255,209,102,.10); border-color: rgba(255,209,102,.75); }
     }
-    /* Only the result-area reset button breathes (keeps UI quiet) */
-    #resetBtn2.warnHint{ animation: breatheWarn 1.2s ease-in-out infinite; }
-    #resetBtn2.dangerHint{ animation: breatheBad 1.1s ease-in-out infinite; }
+    @keyframes pulseBad{
+      0%,100%{ box-shadow: 0 0 0 0 rgba(255,92,92,.00); border-color: rgba(255,92,92,.35); }
+      50%{    box-shadow: 0 0 0 6px rgba(255,92,92,.10); border-color: rgba(255,92,92,.80); }
+    }
+    .pulseWarn{ animation: pulseWarn 1.25s ease-in-out infinite; }
+    .pulseBad{  animation: pulseBad  1.05s ease-in-out infinite; }
 
 </style>
 </head>
@@ -1086,6 +1095,8 @@
     const warn = evaluateWarning(betaDeg, phiDeg, ratio);
     renderWarning(warn, Wkg, betaDeg, phiDeg, T_display, ratio);
 
+    setResetPulse(warn.level);
+
     updateRiskTint();
   }
 
@@ -1267,59 +1278,81 @@ function resetAll(){
   beta.value = 60;
   phi.value = 30;
   setMode('beta');
+
+function bindPressFeedback(elm){
+  if(!elm) return;
+  const add = ()=>elm.classList.add('press');
+  const rm  = ()=>elm.classList.remove('press');
+
+  // Pointer (modern)
+  elm.addEventListener('pointerdown', add, {passive:true});
+  elm.addEventListener('pointerup', rm, {passive:true});
+  elm.addEventListener('pointercancel', rm, {passive:true});
+  elm.addEventListener('pointerleave', rm, {passive:true});
+
+  // Touch fallback
+  elm.addEventListener('touchstart', add, {passive:true});
+  elm.addEventListener('touchend', rm, {passive:true});
+  elm.addEventListener('touchcancel', rm, {passive:true});
+
+  // Mouse fallback
+  elm.addEventListener('mousedown', add, {passive:true});
+  elm.addEventListener('mouseup', rm, {passive:true});
+  elm.addEventListener('mouseleave', rm, {passive:true});
 }
 
-  function hardClear(){
-  // 真正重來：清空輸入與結果（避免誤觸，用長按觸發）
-  w.value = "";
-  beta.value = "";
-  phi.value = "";
-  // 回到預設模式與單位
-  unit.value = 'kgf';
-  if(unitKgfBtn && unitNBtn){
-    unitKgfBtn.classList.add('primary');
-    unitNBtn.classList.remove('primary');
-  }
+function bindLongPressReset(elm, onLong){
+  if(!elm) return;
+  const HOLD_MS = 600;
+  let t = null;
+
+  const clear = ()=>{
+    if(t){ clearTimeout(t); t = null; }
+  };
+
+  const startHold = ()=>{
+    clear();
+    elm._longPressed = false;
+    t = setTimeout(()=>{
+      elm._longPressed = true;
+      try{ onLong && onLong(); }catch(e){}
+    }, HOLD_MS);
+  };
+
+  elm.addEventListener('pointerdown', startHold, {passive:true});
+  elm.addEventListener('pointerup', clear, {passive:true});
+  elm.addEventListener('pointercancel', clear, {passive:true});
+  elm.addEventListener('pointerleave', clear, {passive:true});
+
+  elm.addEventListener('touchstart', startHold, {passive:true});
+  elm.addEventListener('touchend', clear, {passive:true});
+  elm.addEventListener('touchcancel', clear, {passive:true});
+
+  elm.addEventListener('mousedown', startHold, {passive:true});
+  elm.addEventListener('mouseup', clear, {passive:true});
+  elm.addEventListener('mouseleave', clear, {passive:true});
+}
+
+function setResetPulse(level){
+  if(!resetBtn2) return;
+  resetBtn2.classList.remove('pulseWarn','pulseBad');
+  if(level === 'warn') resetBtn2.classList.add('pulseWarn');
+  if(level === 'bad')  resetBtn2.classList.add('pulseBad');
+}
+
+function hardClear(){
+  // 真正「重來」：清空為較保守的預設，並把焦點帶回上方
+  w.value = '';
+  beta.value = 60;
+  phi.value = 30;
   setMode('beta');
-  renderInvalid("請重新輸入重量與角度");
-  // 取消角度快捷鍵高亮
-  document.querySelectorAll('.chip.active').forEach(c=>c.classList.remove('active'));
-  // 取消結果區重設提示（避免殘留）
-  if(resetBtn2){
-    resetBtn2.classList.remove('dangerHint','warnHint');
-  }
+  compute();
+  const ic = document.getElementById('inputCard');
+  if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'});
+}
 }
 
-function bindLongPressReset(btn, onLongPress){
-  if(!btn) return;
-  let timer = null;
-  btn._longPressed = false;
-
-  const start = ()=>{
-    btn._longPressed = false;
-    if(timer) clearTimeout(timer);
-    timer = setTimeout(()=>{
-      btn._longPressed = true;
-      try{ onLongPress(); }catch(e){}
-      showToast("長按已清空");
-    }, 600);
-  };
-  const cancel = ()=>{
-    if(timer){ clearTimeout(timer); timer = null; }
-  };
-
-  btn.addEventListener('pointerdown', start);
-  btn.addEventListener('pointerup', cancel);
-  btn.addEventListener('pointercancel', cancel);
-  btn.addEventListener('pointerleave', cancel);
-
-  // iOS Safari fallback
-  btn.addEventListener('touchstart', start, {passive:true});
-  btn.addEventListener('touchend', cancel, {passive:true});
-  btn.addEventListener('touchcancel', cancel, {passive:true});
-}
-
-// 輸出單位（kgf / N）
+  // 輸出單位（kgf / N）
   if(unitKgfBtn) unitKgfBtn.addEventListener('click', ()=>setUnit('kgf'));
   if(unitNBtn)   unitNBtn.addEventListener('click', ()=>setUnit('N'));
 
@@ -1389,10 +1422,31 @@ function bindLongPressReset(btn, onLongPress){
   
   // Bind press feedback to key buttons (calc / reset / copy / close)
   [calcBtn, resetBtn, resetBtn2, copyBtn, closeA2hs, closeFirstUse].forEach(bindPressFeedback);
+
+  // Press feedback (handfeel)
+  [calcBtn, resetBtn, resetBtn2, copyBtn, closeA2hs, closeFirstUse].forEach(bindPressFeedback);
+
+  // Long-press to hard clear (0.6s)
   bindLongPressReset(resetBtn, hardClear);
   bindLongPressReset(resetBtn2, hardClear);
-resetBtn.addEventListener('click', ()=>{ if(resetBtn._longPressed){ resetBtn._longPressed=false; return; } resetAll(); showToast('已重設'); });
-  if(resetBtn2) resetBtn2.addEventListener('click', ()=>{ if(resetBtn2._longPressed){ resetBtn2._longPressed=false; return; } resetAll(); showToast('已重設'); const ic = document.getElementById('inputCard'); if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'}); }); showToast('已重設'); const ic = document.getElementById('inputCard'); if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'}); });
+
+  // Click: short press => normal reset, long press => already handled
+  resetBtn.addEventListener('click', ()=>{
+    if(resetBtn._longPressed){ resetBtn._longPressed = false; return; }
+    resetAll();
+    showToast('已重設');
+  });
+
+  if(resetBtn2){
+    resetBtn2.addEventListener('click', ()=>{
+      if(resetBtn2._longPressed){ resetBtn2._longPressed = false; return; }
+      resetAll();
+      showToast('已重設');
+      const ic = document.getElementById('inputCard');
+      if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  }
+
 
   compute();
   updateRiskTint();
