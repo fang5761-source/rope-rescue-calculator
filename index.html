@@ -657,24 +657,18 @@
       background: rgba(255,209,102,.08);
     }
 
-    /* ===== Breathing hint when lamp is warn/bad (subtle, tool-like) ===== */
-    @keyframes breatheBad{
-      0%,100%{ box-shadow: 0 0 0 2px rgba(255,92,92,.10); }
-      50%{ box-shadow: 0 0 0 2px rgba(255,92,92,.22), 0 0 18px rgba(255,92,92,.12); }
-    }
+    /* ===== Long-press reset + breathe hint (v1.2.5 fixed8) ===== */
     @keyframes breatheWarn{
-      0%,100%{ box-shadow: 0 0 0 2px rgba(255,209,102,.08); }
-      50%{ box-shadow: 0 0 0 2px rgba(255,209,102,.18), 0 0 18px rgba(255,209,102,.10); }
+      0%,100%{ box-shadow: 0 0 0 2px rgba(255,209,102,.10); filter: brightness(1); }
+      50%{ box-shadow: 0 0 0 3px rgba(255,209,102,.22); filter: brightness(1.08); }
     }
-    .btn.dangerPulse{ animation: breatheBad 1.6s ease-in-out infinite; }
-    .btn.warnPulse{ animation: breatheWarn 1.8s ease-in-out infinite; }
-
-    /* ===== Long-press holding state ===== */
-    .btn.holding{
-      border-color: rgba(122,167,255,.75) !important;
-      background: rgba(122,167,255,.14) !important;
-      box-shadow: 0 0 0 2px rgba(122,167,255,.18), inset 0 0 0 1px rgba(255,255,255,.14) !important;
+    @keyframes breatheBad{
+      0%,100%{ box-shadow: 0 0 0 2px rgba(255,92,92,.10); filter: brightness(1); }
+      50%{ box-shadow: 0 0 0 3px rgba(255,92,92,.22); filter: brightness(1.10); }
     }
+    /* Only the result-area reset button breathes (keeps UI quiet) */
+    #resetBtn2.warnHint{ animation: breatheWarn 1.2s ease-in-out infinite; }
+    #resetBtn2.dangerHint{ animation: breatheBad 1.1s ease-in-out infinite; }
 
 </style>
 </head>
@@ -1133,9 +1127,6 @@
     if(resetBtn2){
       resetBtn2.classList.toggle('dangerHint', warn.level === 'bad');
       resetBtn2.classList.toggle('warnHint', warn.level === 'warn');
-      // gentle breathing hint when lamp is not green
-      resetBtn2.classList.toggle('dangerPulse', warn.level === 'bad');
-      resetBtn2.classList.toggle('warnPulse', warn.level === 'warn');
     }
 
     const unitTxt = unitLabel();
@@ -1278,53 +1269,57 @@ function resetAll(){
   setMode('beta');
 }
 
-
-function clearAll(){
-  // Deep reset: clear inputs for a true restart
-  w.value = '';
-  beta.value = '';
-  phi.value = '';
+  function hardClear(){
+  // 真正重來：清空輸入與結果（避免誤觸，用長按觸發）
+  w.value = "";
+  beta.value = "";
+  phi.value = "";
+  // 回到預設模式與單位
   unit.value = 'kgf';
-  // ensure unit buttons reflect
-  if(unitKgfBtn) unitKgfBtn.setAttribute('aria-pressed','true');
-  if(unitNBtn) unitNBtn.setAttribute('aria-pressed','false');
-
-  setMode('beta'); // also recompute + risk tint
-  renderInvalid('已清空，請重新輸入重量與角度');
-  const ic = document.getElementById('inputCard');
-  if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'});
+  if(unitKgfBtn && unitNBtn){
+    unitKgfBtn.classList.add('primary');
+    unitNBtn.classList.remove('primary');
+  }
+  setMode('beta');
+  renderInvalid("請重新輸入重量與角度");
+  // 取消角度快捷鍵高亮
+  document.querySelectorAll('.chip.active').forEach(c=>c.classList.remove('active'));
+  // 取消結果區重設提示（避免殘留）
+  if(resetBtn2){
+    resetBtn2.classList.remove('dangerHint','warnHint');
+  }
 }
 
-function attachLongPressClear(el){
-  if(!el) return;
-  let t = null;
+function bindLongPressReset(btn, onLongPress){
+  if(!btn) return;
+  let timer = null;
+  btn._longPressed = false;
+
   const start = ()=>{
-    if(t) clearTimeout(t);
-    el.classList.add('holding');
-    t = setTimeout(()=>{
-      el.dataset.ignoreClick = '1';
-      el.classList.remove('holding');
-      try{ if(navigator.vibrate) navigator.vibrate(18); }catch(e){}
-      clearAll();
+    btn._longPressed = false;
+    if(timer) clearTimeout(timer);
+    timer = setTimeout(()=>{
+      btn._longPressed = true;
+      try{ onLongPress(); }catch(e){}
+      showToast("長按已清空");
     }, 600);
   };
-  const end = ()=>{
-    if(t){ clearTimeout(t); t = null; }
-    el.classList.remove('holding');
+  const cancel = ()=>{
+    if(timer){ clearTimeout(timer); timer = null; }
   };
 
-  el.addEventListener('pointerdown', start);
-  el.addEventListener('pointerup', end);
-  el.addEventListener('pointerleave', end);
-  el.addEventListener('pointercancel', end);
+  btn.addEventListener('pointerdown', start);
+  btn.addEventListener('pointerup', cancel);
+  btn.addEventListener('pointercancel', cancel);
+  btn.addEventListener('pointerleave', cancel);
 
   // iOS Safari fallback
-  el.addEventListener('touchstart', start, {passive:true});
-  el.addEventListener('touchend', end, {passive:true});
-  el.addEventListener('touchcancel', end, {passive:true});
+  btn.addEventListener('touchstart', start, {passive:true});
+  btn.addEventListener('touchend', cancel, {passive:true});
+  btn.addEventListener('touchcancel', cancel, {passive:true});
 }
 
-  // 輸出單位（kgf / N）
+// 輸出單位（kgf / N）
   if(unitKgfBtn) unitKgfBtn.addEventListener('click', ()=>setUnit('kgf'));
   if(unitNBtn)   unitNBtn.addEventListener('click', ()=>setUnit('N'));
 
@@ -1394,29 +1389,10 @@ function attachLongPressClear(el){
   
   // Bind press feedback to key buttons (calc / reset / copy / close)
   [calcBtn, resetBtn, resetBtn2, copyBtn, closeA2hs, closeFirstUse].forEach(bindPressFeedback);
-
-// Long-press (0.6s) for a true clear restart (avoids accidental resets)
-attachLongPressClear(resetBtn);
-attachLongPressClear(resetBtn2);
-
-// Short tap: normal reset (keep your original reset near calculate)
-resetBtn.addEventListener('click', (e)=>{
-  if(resetBtn.dataset.ignoreClick === '1'){ resetBtn.dataset.ignoreClick = '0'; e.preventDefault(); return; }
-  resetAll();
-  try{ if(navigator.vibrate) navigator.vibrate(10); }catch(err){}
-});
-
-if(resetBtn2){
-  resetBtn2.addEventListener('click', (e)=>{
-    if(resetBtn2.dataset.ignoreClick === '1'){ resetBtn2.dataset.ignoreClick = '0'; e.preventDefault(); return; }
-    resetAll();
-    try{ if(navigator.vibrate) navigator.vibrate(10); }catch(err){}
-    const ic = document.getElementById('inputCard');
-    if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'});
-  });
-}
-
-});
+  bindLongPressReset(resetBtn, hardClear);
+  bindLongPressReset(resetBtn2, hardClear);
+resetBtn.addEventListener('click', ()=>{ if(resetBtn._longPressed){ resetBtn._longPressed=false; return; } resetAll(); showToast('已重設'); });
+  if(resetBtn2) resetBtn2.addEventListener('click', ()=>{ if(resetBtn2._longPressed){ resetBtn2._longPressed=false; return; } resetAll(); showToast('已重設'); const ic = document.getElementById('inputCard'); if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'}); }); showToast('已重設'); const ic = document.getElementById('inputCard'); if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'}); });
 
   compute();
   updateRiskTint();
