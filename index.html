@@ -1252,6 +1252,72 @@ function bindPressFeedback(el){
   el.addEventListener('touchcancel', off, {passive:true});
 }
 
+
+// Reliable press handling on mobile (avoid iOS Safari eating :active/click)
+function bindPressClass(el){
+  if(!el) return;
+  const on = ()=>el.classList.add('press');
+  const off = ()=>el.classList.remove('press');
+  if(window.PointerEvent){
+    el.addEventListener('pointerdown', on, {passive:true});
+    el.addEventListener('pointerup', off, {passive:true});
+    el.addEventListener('pointercancel', off, {passive:true});
+    el.addEventListener('pointerleave', off, {passive:true});
+  }else{
+    el.addEventListener('touchstart', on, {passive:true});
+    el.addEventListener('touchend', off, {passive:true});
+    el.addEventListener('touchcancel', off, {passive:true});
+    el.addEventListener('mousedown', on);
+    el.addEventListener('mouseup', off);
+    el.addEventListener('mouseleave', off);
+  }
+}
+
+// Short press => shortFn; Long press (holdMs) => longFn. Does not rely on click.
+function bindSmartHold(el, shortFn, longFn, holdMs=600){
+  if(!el) return;
+  let t = null;
+  let didLong = false;
+
+  const clear = ()=>{
+    if(t){ clearTimeout(t); t=null; }
+  };
+
+  const start = ()=>{
+    didLong = false;
+    clear();
+    t = setTimeout(()=>{
+      didLong = true;
+      try{ if(navigator.vibrate) navigator.vibrate(18); }catch(e){}
+      if(typeof longFn === 'function') longFn();
+    }, holdMs);
+  };
+
+  const end = ()=>{
+    const wasLong = didLong;
+    clear();
+    if(!wasLong && typeof shortFn === 'function') shortFn();
+  };
+
+  const cancel = ()=>{ clear(); };
+
+  if(window.PointerEvent){
+    el.addEventListener('pointerdown', start, {passive:true});
+    el.addEventListener('pointerup', end, {passive:true});
+    el.addEventListener('pointercancel', cancel, {passive:true});
+    el.addEventListener('pointerleave', cancel, {passive:true});
+  }else{
+    el.addEventListener('touchstart', start, {passive:true});
+    el.addEventListener('touchend', end, {passive:true});
+    el.addEventListener('touchcancel', cancel, {passive:true});
+    // Desktop fallback
+    el.addEventListener('mousedown', start);
+    el.addEventListener('mouseup', end);
+    el.addEventListener('mouseleave', cancel);
+  }
+}
+
+
 async function copyText(){
   const txt = (hiddenText || "").trim();
   if(!txt){
@@ -1426,29 +1492,34 @@ function hardClear(){
   // Press feedback (handfeel)
   [calcBtn, resetBtn, resetBtn2, copyBtn, closeA2hs, closeFirstUse].forEach(bindPressFeedback);
 
-  // Long-press to hard clear (0.6s)
-  bindLongPressReset(resetBtn, hardClear);
-  bindLongPressReset(resetBtn2, hardClear);
+  
+// Reset buttons: short press = normal reset; long press (0.6s) = hard clear
+bindPressClass(resetBtn);
+bindPressClass(resetBtn2);
 
-  // Click: short press => normal reset, long press => already handled
-  resetBtn.addEventListener('click', ()=>{
-    if(resetBtn._longPressed){ resetBtn._longPressed = false; return; }
+bindSmartHold(resetBtn, ()=>{
+  resetAll();
+  showToast('已重設');
+}, ()=>{
+  hardClear();
+  showToast('已清空');
+}, 600);
+
+if(resetBtn2){
+  bindSmartHold(resetBtn2, ()=>{
     resetAll();
     showToast('已重設');
-  });
+    const ic = document.getElementById('inputCard');
+    if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'});
+  }, ()=>{
+    hardClear();
+    showToast('已清空');
+    const ic = document.getElementById('inputCard');
+    if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'});
+  }, 600);
+}
 
-  if(resetBtn2){
-    resetBtn2.addEventListener('click', ()=>{
-      if(resetBtn2._longPressed){ resetBtn2._longPressed = false; return; }
-      resetAll();
-      showToast('已重設');
-      const ic = document.getElementById('inputCard');
-      if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'});
-    });
-  }
-
-
-  compute();
+compute();
   updateRiskTint();
   highlightAngleChips();
 
