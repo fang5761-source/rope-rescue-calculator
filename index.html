@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>戰繩｜軌道繩張力估算 v1.2.5</title>
+<title>散木｜軌道繩張力估算 v1.2.5</title>
 <style>
 
     :root{
@@ -815,7 +815,7 @@
 <div class="hint" style="margin-top:12px;">
             注意：<span class="mono">繩越水平，張力越爆。</span>
 </div>
-<div class="twoBtns" style="margin-top:14px;"><div class="btn primary" id="copyBtn">複製結果</div></div></div>
+<div class="twoBtns" style="margin-top:14px;"><div class="btn primary" id="copyBtn">複製結果</div><div class="btn" id="resetBtn2">重設</div></div></div>
 </section>
 
 
@@ -868,7 +868,11 @@
         5. 往下滑，選擇「加到主畫面」<br/>
         6. 點選「新增」，即可將捷徑加到主畫面
       </div>
-    </div>
+    
+      <div class="twoBtns" style="margin-top:14px; grid-template-columns:1fr;">
+        <button class="btn" id="closeA2hs" type="button">收合</button>
+      </div>
+</div>
   </details>
 
   <details class="card" id="devinfo">
@@ -904,7 +908,7 @@
   </details>
 </div>
 
-<div class="toast" id="toast">已複製到剪貼簿</div>已複製到剪貼簿</div>
+<div class="toast" id="toast">已複製到剪貼簿</div>
 <script>
   const el = (id)=>document.getElementById(id);
 
@@ -936,6 +940,7 @@
   const copyBtn = el('copyBtn');
   const calcBtn = el('calcBtn');
   const resetBtn = el('resetBtn');
+  const resetBtn2 = el('resetBtn2');
   const toast = el('toast');
 
   const unitKgfBtn = el('unitKgf');
@@ -1258,6 +1263,7 @@ function resetAll(){
   }
 
   resetBtn.addEventListener('click', resetAll);
+  if(resetBtn2) resetBtn2.addEventListener('click', ()=>{ resetAll(); showToast('已重設'); const ic = document.getElementById('inputCard'); if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'}); });
 
   compute();
   updateRiskTint();
