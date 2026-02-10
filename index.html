@@ -974,21 +974,28 @@
 </div>
 
 <script>
+  // ===== Helpers =====
   const el = (id)=>document.getElementById(id);
 
+  function clamp(num, min, max){
+    return Math.max(min, Math.min(max, num));
+  }
+  function deg2rad(d){ return d * Math.PI / 180; }
+  function r2(x){ return Math.round(x * 100) / 100; }
+
+  // ===== Elements =====
   const w = el('w');
   const unit = el('unit');
 
   const btnBeta = el('btnBeta');
   const btnPhi  = el('btnPhi');
-  const modeLabel = el('modeLabel');
+  const modeLabel = el('modeLabel'); // may be null (kept for backward compat)
 
   const betaBox = el('betaBox');
   const phiBox  = el('phiBox');
 
   const beta = el('beta');
-
-  const phi = el('phi');
+  const phi  = el('phi');
 
   const T_out = el('T');
   const A_out = el('A');
@@ -1009,16 +1016,11 @@
   const unitKgfBtn = el('unitKgf');
   const unitNBtn   = el('unitN');
 
-
+  // ===== State =====
   let angleMode = 'beta';
   let hiddenText = "";
 
-  function clamp(num, min, max){
-    return Math.max(min, Math.min(max, num));
-  }
-  function deg2rad(d){ return d * Math.PI / 180; }
-  function r2(x){ return Math.round(x * 100) / 100; }
-
+  // ===== Unit helpers =====
   function toForce(valueKgf){
     return unit.value === 'N' ? (valueKgf * 9.81) : valueKgf;
   }
@@ -1033,73 +1035,22 @@
     compute();
   }
 
+  // ===== Weight quick keys =====
   function setWeightFromQuick(action, v){
     const cur = parseFloat(w.value || '0');
     const val = Number(v);
     let next = cur;
+
     if(action === 'add') next = (isFinite(cur)?cur:0) + val;
     else if(action === 'set') next = val;
     else if(action === 'reset') next = val;
+
     next = Math.max(0, next);
     w.value = String(next);
     w.dispatchEvent(new Event('input', {bubbles:true}));
   }
-  function compute(){
-    const Wkg = parseFloat(w.value);
-    if(!isFinite(Wkg) || Wkg <= 0){
-      renderInvalid("重量需要 > 0");
-      return;
-    }
 
-    const W_kgf = Wkg;
-    let betaDeg, phiDeg;
-    let T_kgf;
-
-    if(angleMode === 'beta'){
-      betaDeg = clamp(parseFloat(beta.value), 1, 179);
-      beta.value = betaDeg;
-      beta.value = betaDeg;
-
-      phiDeg = 90 - (betaDeg / 2);
-      const cosTerm = Math.cos(deg2rad(betaDeg / 2));
-      if(cosTerm <= 0.00001){
-        renderInvalid("角度太極端，無法計算");
-        return;
-      }
-      T_kgf = W_kgf / (2 * cosTerm);
-    }else{
-      phiDeg = clamp(parseFloat(phi.value), 1, 89);
-      phi.value = phiDeg;
-      phi.value = phiDeg;
-
-      betaDeg = 2 * (90 - phiDeg);
-      const sinTerm = Math.sin(deg2rad(phiDeg));
-      if(sinTerm <= 0.00001){
-        renderInvalid("角度太小，無法計算");
-        return;
-      }
-      T_kgf = W_kgf / (2 * sinTerm);
-    }
-
-    const ratio = T_kgf / W_kgf;
-    const T_display = toForce(T_kgf);
-
-    unitT.textContent = unitLabel();
-    unitA.textContent = unitLabel();
-
-    T_out.textContent = r2(T_display).toLocaleString('en-US');
-    A_out.textContent = r2(T_display).toLocaleString('en-US');
-    ratio_out.textContent = r2(ratio).toLocaleString('en-US');
-    eqAngle_out.textContent = `β ${r2(betaDeg)}°  ↔  φ ${r2(phiDeg)}°`;
-
-    const warn = evaluateWarning(betaDeg, phiDeg, ratio);
-    renderWarning(warn, Wkg, betaDeg, phiDeg, T_display, ratio);
-
-    setResetPulse(warn.level);
-
-    updateRiskTint();
-  }
-
+  // ===== Warning & tint =====
   function evaluateWarning(betaDeg, phiDeg, ratio){
     let level = 'good';
     let title = "綠燈：張力在可控範圍";
@@ -1135,6 +1086,7 @@
 
     statusText.innerHTML = `<strong>${warn.title}</strong><br/>${warn.msg}`;
 
+    // Color hints on the "result reset" button
     if(resetBtn2){
       resetBtn2.classList.toggle('dangerHint', warn.level === 'bad');
       resetBtn2.classList.toggle('warnHint', warn.level === 'warn');
@@ -1169,276 +1121,250 @@
     lamp.style.background = getComputedStyle(document.documentElement).getPropertyValue('--bad');
     statusText.innerHTML = `<strong>無法計算</strong><br/>${message}`;
     hiddenText = "";
+    setResetPulse('bad');
+    updateRiskTint();
   }
 
-  
-  
+  function updateRiskTint(){
+    const resultCard = document.getElementById('resultCard');
+    if(!resultCard) return;
+    resultCard.classList.remove('safe','warn','bad');
 
-function updateRiskTint(){
-  const resultCard = document.getElementById('resultCard');
-  if(!resultCard) return;
-  resultCard.classList.remove('safe','warn','bad');
-
-  if(angleMode === 'beta'){
-    const b = Number(beta.value);
-    // β 小：較垂直（較保守）；β 大：越水平（越危險）
-    let cls = 'warn';
-    if(b <= 60) cls = 'safe';
-    else if(b <= 120) cls = 'warn';
-    else cls = 'bad';
-    resultCard.classList.add(cls);
-  }else{
-    const p = Number(phi.value);
-    // φ 大：較垂直（較保守）；φ 小：越水平（越危險）
-    let cls = 'warn';
-    if(p >= 45) cls = 'safe';
-    else if(p >= 30) cls = 'warn';
-    else cls = 'bad';
-    resultCard.classList.add(cls);
-  }
-}
-
-function highlightAngleChips(){
-  document.querySelectorAll('.chip[data-angle]').forEach(c=>{
-    const mode = c.getAttribute('data-mode');
-    const ang = Number(c.getAttribute('data-angle'));
-    const current = (mode === 'beta') ? Number(beta.value) : Number(phi.value);
-    c.classList.toggle('active', mode === angleMode && ang === current);
-  });
-}
-
-function setMode(mode){
-  angleMode = mode;
-  if(mode === 'beta'){
-    btnBeta.classList.add('primary');
-    btnPhi.classList.remove('primary');
-    betaBox.style.display = '';
-    phiBox.style.display = 'none';
-  }else{
-    btnPhi.classList.add('primary');
-    btnBeta.classList.remove('primary');
-    betaBox.style.display = 'none';
-    phiBox.style.display = '';
+    if(angleMode === 'beta'){
+      const b = Number(beta.value);
+      let cls = 'warn';
+      if(b <= 60) cls = 'safe';
+      else if(b <= 120) cls = 'warn';
+      else cls = 'bad';
+      resultCard.classList.add(cls);
+    }else{
+      const p = Number(phi.value);
+      let cls = 'warn';
+      if(p >= 45) cls = 'safe';
+      else if(p >= 30) cls = 'warn';
+      else cls = 'bad';
+      resultCard.classList.add(cls);
+    }
   }
 
-  if(modeLabel){
-    modeLabel.textContent = (mode === 'beta')
-      ? '模式：角度用 β（V 字夾角）'
-      : '模式：角度用 φ（單側仰角）';
+  function highlightAngleChips(){
+    document.querySelectorAll('.chip[data-angle]').forEach(c=>{
+      const mode = c.getAttribute('data-mode');
+      const ang = Number(c.getAttribute('data-angle'));
+      const current = (mode === 'beta') ? Number(beta.value) : Number(phi.value);
+      c.classList.toggle('active', mode === angleMode && ang === current);
+    });
   }
-  compute();
-  updateRiskTint();
-  highlightAngleChips();
-}
 
-function showToast(_text){
-  try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){}
-}
+  // ===== Mode =====
+  function setMode(mode){
+    angleMode = mode;
 
-function scrollToInputCard(){
-  const ic = document.getElementById('inputCard');
-  if(!ic) return;
-  // 1) 最保險：改 hash（在 iOS/LINE WebView 常比 scrollIntoView 穩）
-  try{ location.hash = '#inputCard'; }catch(e){}
-  // 2) 再補一刀：用 scrollTo 依卡片實際位置微調（避免被固定 padding 吃掉）
-  const doScroll = ()=>{
-    const top = ic.getBoundingClientRect().top + window.scrollY - 12;
-    try{ window.scrollTo({top, behavior:'smooth'}); }
-    catch(e){ window.scrollTo(0, top); }
-  };
-  // 立即 + 下一拍各做一次，避免 iOS 偶發忽略
-  doScroll();
-  setTimeout(doScroll, 80);
-}
+    if(mode === 'beta'){
+      btnBeta.classList.add('primary');
+      btnPhi.classList.remove('primary');
+      betaBox.style.display = '';
+      phiBox.style.display = 'none';
+    }else{
+      btnPhi.classList.add('primary');
+      btnBeta.classList.remove('primary');
+      betaBox.style.display = 'none';
+      phiBox.style.display = '';
+    }
 
-// ===== Forced press feedback (iOS-safe) =====
-function bindPressFeedback(el){
-  if(!el) return;
-  const on = ()=>el.classList.add('press');
-  const off = ()=>el.classList.remove('press');
+    if(modeLabel){
+      modeLabel.textContent = (mode === 'beta')
+        ? '模式：角度用 β（V 字夾角）'
+        : '模式：角度用 φ（單側仰角）';
+    }
 
-  el.addEventListener('pointerdown', on);
-  el.addEventListener('pointerup', off);
-  el.addEventListener('pointercancel', off);
-  el.addEventListener('pointerleave', off);
-
-  // iOS Safari fallback
-  el.addEventListener('touchstart', on, {passive:true});
-  el.addEventListener('touchend', off, {passive:true});
-  el.addEventListener('touchcancel', off, {passive:true});
-}
-
-
-// Reliable press handling on mobile (avoid iOS Safari eating :active/click)
-function bindPressClass(el){
-  if(!el) return;
-  const on = ()=>el.classList.add('press');
-  const off = ()=>el.classList.remove('press');
-  if(window.PointerEvent){
-    el.addEventListener('pointerdown', on, {passive:true});
-    el.addEventListener('pointerup', off, {passive:true});
-    el.addEventListener('pointercancel', off, {passive:true});
-    el.addEventListener('pointerleave', off, {passive:true});
-  }else{
-    el.addEventListener('touchstart', on, {passive:true});
-    el.addEventListener('touchend', off, {passive:true});
-    el.addEventListener('touchcancel', off, {passive:true});
-    el.addEventListener('mousedown', on);
-    el.addEventListener('mouseup', off);
-    el.addEventListener('mouseleave', off);
+    compute();
+    updateRiskTint();
+    highlightAngleChips();
   }
-}
 
-// Short press => shortFn; Long press (holdMs) => longFn. Does not rely on click.
-function bindSmartHold(el, shortFn, longFn, holdMs=600){
-  if(!el) return;
-  let t = null;
-  let didLong = false;
+  // ===== Compute =====
+  function compute(){
+    const Wkg = parseFloat(w.value);
+    if(!isFinite(Wkg) || Wkg <= 0){
+      renderInvalid("重量需要 > 0");
+      return;
+    }
 
-  const clear = ()=>{
-    if(t){ clearTimeout(t); t=null; }
-  };
+    const W_kgf = Wkg; // 這裡採用 kgf 直觀近似（教學用途）
+    let betaDeg, phiDeg, T_kgf;
 
-  const start = ()=>{
-    didLong = false;
-    clear();
-    t = setTimeout(()=>{
-      didLong = true;
-      try{ if(navigator.vibrate) navigator.vibrate(18); }catch(e){}
-      if(typeof longFn === 'function') longFn();
-    }, holdMs);
-  };
+    if(angleMode === 'beta'){
+      betaDeg = clamp(parseFloat(beta.value), 1, 179);
+      beta.value = String(betaDeg);
 
-  const end = ()=>{
-    const wasLong = didLong;
-    clear();
-    if(!wasLong && typeof shortFn === 'function') shortFn();
-  };
+      phiDeg = 90 - (betaDeg / 2);
+      const cosTerm = Math.cos(deg2rad(betaDeg / 2));
+      if(cosTerm <= 0.00001){
+        renderInvalid("角度太極端，無法計算");
+        return;
+      }
+      T_kgf = W_kgf / (2 * cosTerm);
+    }else{
+      phiDeg = clamp(parseFloat(phi.value), 1, 89);
+      phi.value = String(phiDeg);
 
-  const cancel = ()=>{ clear(); };
+      betaDeg = 2 * (90 - phiDeg);
+      const sinTerm = Math.sin(deg2rad(phiDeg));
+      if(sinTerm <= 0.00001){
+        renderInvalid("角度太小，無法計算");
+        return;
+      }
+      T_kgf = W_kgf / (2 * sinTerm);
+    }
 
-  if(window.PointerEvent){
-    el.addEventListener('pointerdown', start, {passive:true});
-    el.addEventListener('pointerup', end, {passive:true});
-    el.addEventListener('pointercancel', cancel, {passive:true});
-    el.addEventListener('pointerleave', cancel, {passive:true});
-  }else{
-    el.addEventListener('touchstart', start, {passive:true});
-    el.addEventListener('touchend', end, {passive:true});
-    el.addEventListener('touchcancel', cancel, {passive:true});
-    // Desktop fallback
-    el.addEventListener('mousedown', start);
-    el.addEventListener('mouseup', end);
-    el.addEventListener('mouseleave', cancel);
+    const ratio = T_kgf / W_kgf;
+    const T_display = toForce(T_kgf);
+
+    unitT.textContent = unitLabel();
+    unitA.textContent = unitLabel();
+
+    T_out.textContent = r2(T_display).toLocaleString('en-US');
+    A_out.textContent = r2(T_display).toLocaleString('en-US');
+    ratio_out.textContent = r2(ratio).toLocaleString('en-US');
+    eqAngle_out.textContent = `β ${r2(betaDeg)}°  ↔  φ ${r2(phiDeg)}°`;
+
+    const warn = evaluateWarning(betaDeg, phiDeg, ratio);
+    renderWarning(warn, Wkg, betaDeg, phiDeg, T_display, ratio);
+
+    setResetPulse(warn.level);
+    updateRiskTint();
   }
-}
 
-
-async function copyText(){
-  const txt = (hiddenText || "").trim();
-  if(!txt){
-    showToast("沒有可複製內容");
-    return;
+  // ===== Toast (silent, keeps UI clean) =====
+  function showToast(_text){
+    // 你這份 UI 已經把 toast 做成不顯示線條了；目前先保留震動即可
+    try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){}
   }
-  try{
-    await navigator.clipboard.writeText(txt);
-    showToast("已複製到剪貼簿");
-  }catch(e){
-    const ta = document.createElement('textarea');
-    ta.value = txt;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    showToast("已複製（備援模式）");
+
+  // ===== Copy =====
+  async function copyText(){
+    const txt = (hiddenText || "").trim();
+    if(!txt){
+      showToast("沒有可複製內容");
+      return;
+    }
+    try{
+      await navigator.clipboard.writeText(txt);
+      showToast("已複製到剪貼簿");
+    }catch(e){
+      const ta = document.createElement('textarea');
+      ta.value = txt;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast("已複製（備援模式）");
+    }
   }
-}
 
-function resetAll(){
-  w.value = 150;
-  unit.value = 'kgf';
-  beta.value = 60;
-  phi.value = 30;
-  setMode('beta');
+  // ===== Reset behavior =====
+  function resetAll(){
+    w.value = 150;
+    unit.value = 'kgf';
+    beta.value = 60;
+    phi.value = 30;
+    setMode('beta');
+    compute();
+  }
 
-function bindPressFeedback(elm){
-  if(!elm) return;
-  const add = ()=>elm.classList.add('press');
-  const rm  = ()=>elm.classList.remove('press');
+  function setResetPulse(level){
+    if(!resetBtn2) return;
+    resetBtn2.classList.remove('pulseWarn','pulseBad');
+    if(level === 'warn') resetBtn2.classList.add('pulseWarn');
+    if(level === 'bad')  resetBtn2.classList.add('pulseBad');
+  }
 
-  // Pointer (modern)
-  elm.addEventListener('pointerdown', add, {passive:true});
-  elm.addEventListener('pointerup', rm, {passive:true});
-  elm.addEventListener('pointercancel', rm, {passive:true});
-  elm.addEventListener('pointerleave', rm, {passive:true});
+  function hardClear(){
+    // 真正「重來」：清空重量，角度回到保守預設，並回到參數輸入區
+    w.value = '';
+    beta.value = 60;
+    phi.value = 30;
+    unit.value = 'kgf';
+    setMode('beta');
+    compute();
+    jumpToInput();
+  }
 
-  // Touch fallback
-  elm.addEventListener('touchstart', add, {passive:true});
-  elm.addEventListener('touchend', rm, {passive:true});
-  elm.addEventListener('touchcancel', rm, {passive:true});
+  function jumpToInput(){
+    const ic = document.getElementById('inputCard');
+    if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'});
+  }
 
-  // Mouse fallback
-  elm.addEventListener('mousedown', add, {passive:true});
-  elm.addEventListener('mouseup', rm, {passive:true});
-  elm.addEventListener('mouseleave', rm, {passive:true});
-}
+  // ===== Press feedback (iOS-safe) =====
+  function bindPressFeedback(node){
+    if(!node) return;
+    const on = ()=>node.classList.add('press');
+    const off = ()=>node.classList.remove('press');
 
-function bindLongPressReset(elm, onLong){
-  if(!elm) return;
-  const HOLD_MS = 600;
-  let t = null;
+    if(window.PointerEvent){
+      node.addEventListener('pointerdown', on, {passive:true});
+      node.addEventListener('pointerup', off, {passive:true});
+      node.addEventListener('pointercancel', off, {passive:true});
+      node.addEventListener('pointerleave', off, {passive:true});
+    }else{
+      node.addEventListener('touchstart', on, {passive:true});
+      node.addEventListener('touchend', off, {passive:true});
+      node.addEventListener('touchcancel', off, {passive:true});
+      node.addEventListener('mousedown', on);
+      node.addEventListener('mouseup', off);
+      node.addEventListener('mouseleave', off);
+    }
+  }
 
-  const clear = ()=>{
-    if(t){ clearTimeout(t); t = null; }
-  };
+  // Short press => shortFn; Long press => longFn
+  function bindSmartHold(node, shortFn, longFn, holdMs=600){
+    if(!node) return;
+    let t = null;
+    let didLong = false;
 
-  const startHold = ()=>{
-    clear();
-    elm._longPressed = false;
-    t = setTimeout(()=>{
-      elm._longPressed = true;
-      try{ onLong && onLong(); }catch(e){}
-    }, HOLD_MS);
-  };
+    const clear = ()=>{
+      if(t){ clearTimeout(t); t=null; }
+    };
 
-  elm.addEventListener('pointerdown', startHold, {passive:true});
-  elm.addEventListener('pointerup', clear, {passive:true});
-  elm.addEventListener('pointercancel', clear, {passive:true});
-  elm.addEventListener('pointerleave', clear, {passive:true});
+    const start = ()=>{
+      didLong = false;
+      clear();
+      t = setTimeout(()=>{
+        didLong = true;
+        try{ if(navigator.vibrate) navigator.vibrate(18); }catch(e){}
+        if(typeof longFn === 'function') longFn();
+      }, holdMs);
+    };
 
-  elm.addEventListener('touchstart', startHold, {passive:true});
-  elm.addEventListener('touchend', clear, {passive:true});
-  elm.addEventListener('touchcancel', clear, {passive:true});
+    const end = ()=>{
+      const wasLong = didLong;
+      clear();
+      if(!wasLong && typeof shortFn === 'function') shortFn();
+    };
 
-  elm.addEventListener('mousedown', startHold, {passive:true});
-  elm.addEventListener('mouseup', clear, {passive:true});
-  elm.addEventListener('mouseleave', clear, {passive:true});
-}
+    const cancel = ()=>{ clear(); };
 
-function setResetPulse(level){
-  if(!resetBtn2) return;
-  resetBtn2.classList.remove('pulseWarn','pulseBad');
-  if(level === 'warn') resetBtn2.classList.add('pulseWarn');
-  if(level === 'bad')  resetBtn2.classList.add('pulseBad');
-}
+    if(window.PointerEvent){
+      node.addEventListener('pointerdown', start, {passive:true});
+      node.addEventListener('pointerup', end, {passive:true});
+      node.addEventListener('pointercancel', cancel, {passive:true});
+      node.addEventListener('pointerleave', cancel, {passive:true});
+    }else{
+      node.addEventListener('touchstart', start, {passive:true});
+      node.addEventListener('touchend', end, {passive:true});
+      node.addEventListener('touchcancel', cancel, {passive:true});
+      node.addEventListener('mousedown', start);
+      node.addEventListener('mouseup', end);
+      node.addEventListener('mouseleave', cancel);
+    }
+  }
 
-function hardClear(){
-  // 真正「重來」：清空為較保守的預設，並把焦點帶回上方
-  w.value = '';
-  beta.value = 60;
-  phi.value = 30;
-  setMode('beta');
-  compute();
-  const ic = document.getElementById('inputCard');
-  if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'});
-}
-}
-
-  // 輸出單位（kgf / N）
+  // ===== Bind events =====
   if(unitKgfBtn) unitKgfBtn.addEventListener('click', ()=>setUnit('kgf'));
   if(unitNBtn)   unitNBtn.addEventListener('click', ()=>setUnit('N'));
 
-  // 總重量快捷鍵（同一排、不換行）
+  // Weight chips
   document.querySelectorAll('.wchip[data-w-action]').forEach(b=>{
     b.addEventListener('click', ()=>{
       const action = b.getAttribute('data-w-action');
@@ -1447,11 +1373,11 @@ function hardClear(){
     });
   });
 
-  // 角度模式切換
-  btnBeta.addEventListener('click', ()=>setMode('beta'));
-  btnPhi.addEventListener('click', ()=>setMode('phi'));
+  // Mode toggle
+  if(btnBeta) btnBeta.addEventListener('click', ()=>setMode('beta'));
+  if(btnPhi)  btnPhi.addEventListener('click', ()=>setMode('phi'));
 
-  // 角度快捷鍵（按下就套用；必要時切換模式）
+  // Angle chips
   document.querySelectorAll('.chip[data-angle]').forEach(chip=>{
     chip.addEventListener('click', ()=>{
       const mode = chip.getAttribute('data-mode');
@@ -1464,23 +1390,70 @@ function hardClear(){
     });
   });
 
-  // 即時計算
+  // Live compute
   [w, unit, beta, phi].forEach(x=>{
+    if(!x) return;
     x.addEventListener('input', ()=>{ compute(); updateRiskTint(); highlightAngleChips(); });
   });
 
-  copyBtn.addEventListener('click', copyText);
+  if(copyBtn) copyBtn.addEventListener('click', copyText);
 
-  // 計算（保留即時計算，但給「手感」按鍵）
-  calcBtn.addEventListener('click', ()=>{
-    compute();
-    const rc = document.getElementById('resultCard');
-    if(rc) rc.scrollIntoView({behavior:'smooth', block:'start'});
-    showToast('已計算');
+  if(calcBtn){
+    calcBtn.addEventListener('click', ()=>{
+      compute();
+      const rc = document.getElementById('resultCard');
+      if(rc) rc.scrollIntoView({behavior:'smooth', block:'start'});
+      showToast('已計算');
+    });
+  }
+
+  // Reset buttons:
+  // - control card reset: resetAll (no forced scroll)
+  // - result card reset (next to copy): resetAll + jump to input (requested)
+  bindSmartHold(resetBtn, ()=>{
+    resetAll();
+    showToast('已重設');
+  }, ()=>{
+    hardClear();
+    showToast('已清空');
+  }, 600);
+
+  if(resetBtn2){
+    bindSmartHold(resetBtn2, ()=>{
+      resetAll();
+      showToast('已重設');
+      jumpToInput(); // ✅ requested behavior
+    }, ()=>{
+      hardClear();
+      showToast('已清空');
+      jumpToInput();
+    }, 600);
+  }
+
+  // Press feedback for key buttons
+  [calcBtn, resetBtn, resetBtn2, copyBtn, unitKgfBtn, unitNBtn].forEach(bindPressFeedback);
+
+  // Angle stepper ▲▼ (fix: make sure it always binds)
+  document.querySelectorAll('.stepBtn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const targetId = btn.getAttribute('data-target');
+      const delta = Number(btn.getAttribute('data-delta') || 0);
+      const input = document.getElementById(targetId);
+      if(!input) return;
+
+      const step = Number(input.step || 1) || 1;
+      const min = input.min!=='' ? Number(input.min) : -Infinity;
+      const max = input.max!=='' ? Number(input.max) : Infinity;
+      const cur = Number(input.value || 0);
+
+      let next = cur + delta*step;
+      next = Math.min(max, Math.max(min, next));
+      input.value = String(next);
+      input.dispatchEvent(new Event('input', {bubbles:true}));
+    });
   });
 
-
-  // Info cards: collapse buttons
+  // Info cards collapse buttons (if exist)
   const a2hsDetails = el('a2hs');
   const firstUseDetails = el('firstUse');
   const closeA2hs = el('closeA2hs');
@@ -1500,101 +1473,12 @@ function hardClear(){
       if(s) s.scrollIntoView({behavior:'smooth', block:'start'});
     });
   }
+  [closeA2hs, closeFirstUse].forEach(bindPressFeedback);
 
-  
-  // Bind press feedback to key buttons (calc / reset / copy / close)
-  [calcBtn, resetBtn, resetBtn2, copyBtn, closeA2hs, closeFirstUse].forEach(bindPressFeedback);
-
-  // Press feedback (handfeel)
-  [calcBtn, resetBtn, resetBtn2, copyBtn, closeA2hs, closeFirstUse].forEach(bindPressFeedback);
-
-  
-// Reset buttons: short press = normal reset; long press (0.6s) = hard clear
-bindPressClass(resetBtn);
-bindPressClass(resetBtn2);
-
-bindSmartHold(resetBtn, ()=>{
-  resetAll();
-  showToast('已重設');
-}, ()=>{
-  hardClear();
-  showToast('已清空');
-}, 600);
-
-if(resetBtn2){
-  bindSmartHold(resetBtn2, ()=>{
-    resetAll();
-    showToast('已重設');
-    scrollToInputCard();
-  }, ()=>{
-    hardClear();
-    showToast('已清空');
-    scrollToInputCard();
-  }, 600);
-}
-
-compute();
+  // ===== Init =====
+  compute();
   updateRiskTint();
   highlightAngleChips();
-
-
-// 微調角度（▲▼）——超保險版：iOS / LINE WebView 也能穩定加減
-function stepAngleBy(targetId, delta){
-  const inp = document.getElementById(targetId);
-  if(!inp) return;
-  const step = Number(inp.step || 1) || 1;
-  const min = (inp.min !== '') ? Number(inp.min) : -Infinity;
-  const max = (inp.max !== '') ? Number(inp.max) : Infinity;
-  const cur = Number(inp.value || 0);
-  let next = cur + delta * step;
-  next = Math.min(max, Math.max(min, next));
-  inp.value = String(next);
-  inp.dispatchEvent(new Event('input', {bubbles:true}));
-}
-
-function bindStepBtn(btn){
-  if(!btn) return;
-  const targetId = btn.getAttribute('data-target');
-  const delta = Number(btn.getAttribute('data-delta') || 0);
-
-  // 先擋掉 WebView 把點擊當成「滾動/選取」的怪行為
-  const guard = (ev)=>{
-    try{ ev.preventDefault(); }catch(e){}
-    try{ ev.stopPropagation(); }catch(e){}
-  };
-  btn.addEventListener('touchstart', guard, {passive:false});
-  btn.addEventListener('pointerdown', guard, {passive:false});
-  btn.addEventListener('mousedown', guard);
-
-  // 真正執行放在 click（最穩），同時再補 touchend（有些 WebView 不派 click）
-  const run = (ev)=>{
-    try{ ev.preventDefault(); }catch(e){}
-    try{ ev.stopPropagation(); }catch(e){}
-    stepAngleBy(targetId, delta);
-  };
-  btn.addEventListener('click', run);
-  btn.addEventListener('touchend', run, {passive:false});
-  btn.addEventListener('pointerup', run);
-}
-
-document.querySelectorAll('.stepBtn').forEach(bindStepBtn);
-
-// 角度快捷鍵：按下就直接套用到輸入框
-document.querySelectorAll('.chip[data-angle]').forEach(chip=>{
-  chip.addEventListener('click', ()=>{
-    const mode = chip.getAttribute('data-mode');
-    const ang = Number(chip.getAttribute('data-angle'));
-    const id = (mode==='phi') ? 'phi' : 'beta';
-    const el = document.getElementById(id);
-    if(!el) return;
-    el.value = String(ang);
-    el.dispatchEvent(new Event('input', {bubbles:true}));
-    // 也順手高亮目前按到的角度
-    document.querySelectorAll(`.chip[data-mode="${mode}"]`).forEach(c=>c.classList.remove('active'));
-    chip.classList.add('active');
-  });
-});
-
 </script>
 </body>
 </html>
