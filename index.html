@@ -635,6 +635,27 @@
       box-shadow: 0 0 0 2px rgba(122,167,255,.18) inset;
     }
 
+
+    /* ===== Forced press feedback (iOS-safe) ===== */
+    .press{
+      border-color: rgba(122,167,255,.95) !important;
+      box-shadow:
+        0 0 0 2px rgba(122,167,255,.28),
+        inset 0 0 0 1px rgba(255,255,255,.18) !important;
+      background: rgba(122,167,255,.18) !important;
+      transform: translateY(1px);
+    }
+    /* Subtle nudge for quick "restart" when risk is high */
+    .btn.dangerHint{
+      border-color: rgba(255,92,92,.55);
+      box-shadow: 0 0 0 2px rgba(255,92,92,.14);
+      background: rgba(255,92,92,.10);
+    }
+    .btn.warnHint{
+      border-color: rgba(255,209,102,.50);
+      box-shadow: 0 0 0 2px rgba(255,209,102,.12);
+      background: rgba(255,209,102,.08);
+    }
 </style>
 </head>
 <body>
@@ -1089,6 +1110,11 @@
 
     statusText.innerHTML = `<strong>${warn.title}</strong><br/>${warn.msg}`;
 
+    if(resetBtn2){
+      resetBtn2.classList.toggle('dangerHint', warn.level === 'bad');
+      resetBtn2.classList.toggle('warnHint', warn.level === 'warn');
+    }
+
     const unitTxt = unitLabel();
     const angleTxt = `β=${r2(betaDeg)}° / φ=${r2(phiDeg)}°`;
     const Ttxt = `${r2(T_display)} ${unitTxt}`;
@@ -1182,6 +1208,23 @@ function setMode(mode){
 
 function showToast(_text){
   try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){}
+}
+
+// ===== Forced press feedback (iOS-safe) =====
+function bindPressFeedback(el){
+  if(!el) return;
+  const on = ()=>el.classList.add('press');
+  const off = ()=>el.classList.remove('press');
+
+  el.addEventListener('pointerdown', on);
+  el.addEventListener('pointerup', off);
+  el.addEventListener('pointercancel', off);
+  el.addEventListener('pointerleave', off);
+
+  // iOS Safari fallback
+  el.addEventListener('touchstart', on, {passive:true});
+  el.addEventListener('touchend', off, {passive:true});
+  el.addEventListener('touchcancel', off, {passive:true});
 }
 
 async function copyText(){
@@ -1279,7 +1322,10 @@ function resetAll(){
     });
   }
 
-  resetBtn.addEventListener('click', resetAll);
+  
+  // Bind press feedback to key buttons (calc / reset / copy / close)
+  [calcBtn, resetBtn, resetBtn2, copyBtn, closeA2hs, closeFirstUse].forEach(bindPressFeedback);
+resetBtn.addEventListener('click', resetAll);
   if(resetBtn2) resetBtn2.addEventListener('click', ()=>{ resetAll(); showToast('已重設'); const ic = document.getElementById('inputCard'); if(ic) ic.scrollIntoView({behavior:'smooth', block:'start'}); });
 
   compute();
