@@ -1,5 +1,5 @@
 # Rope Rescue Calculator
-
+軌道繩張力估算
 A field-oriented calculator designed for rope rescue setup and training.
 
 This tool helps instructors, assistants, and trainees quickly estimate:
