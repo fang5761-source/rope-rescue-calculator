@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 
 <html lang="zh-Hant-TW">
@@ -774,12 +775,12 @@
         <div class="sliderWrap" id="phiBox" style="display:none;">
           <label for="phi">單側仰角 φ（度，相對水平）</label>
           <div aria-label="角度快捷" class="quickAngles">
-            <button class="chip safe" data-angle="15" data-mode="phi" type="button">φ 15°</button>
-            <button class="chip safe" data-angle="20" data-mode="phi" type="button">φ 20°</button>
+            <button class="chip bad" data-angle="15" data-mode="phi" type="button">φ 15°</button>
+            <button class="chip bad" data-angle="20" data-mode="phi" type="button">φ 20°</button>
             <button class="chip warn" data-angle="30" data-mode="phi" type="button">φ 30°</button>
-            <button class="chip warn" data-angle="45" data-mode="phi" type="button">φ 45°</button>
-            <button class="chip bad" data-angle="60" data-mode="phi" type="button">φ 60°</button>
-            <button class="chip bad" data-angle="75" data-mode="phi" type="button">φ 75°</button>
+            <button class="chip safe" data-angle="45" data-mode="phi" type="button">φ 45°</button>
+            <button class="chip safe" data-angle="60" data-mode="phi" type="button">φ 60°</button>
+            <button class="chip safe" data-angle="75" data-mode="phi" type="button">φ 75°</button>
           </div>
 
           <div class="row angleRow">
@@ -791,7 +792,7 @@
                   <button aria-label="φ 減 1 度" class="stepBtn" data-delta="-1" data-target="phi" type="button">▼</button>
                 </div>
               </div>
-              <div class="hint">φ 越大 → 繩越「垂直」 → 張力越接近 W/2（較保守）。</div>
+              <div class="hint">φ 越小越危險；φ 45° 以下屬角度敏感區，請特別注意張力上升。</div>
             </div>
           </div>
         </div>
@@ -909,7 +910,7 @@
         <div class="hitem"><div class="hnum">(4)</div><div class="htxt">按「計算」會自動捲到結果區，方便現場快速確認。</div></div>
       </div>
       <div class="hint" style="margin-top:12px;">
-        小提醒：<span class="mono">繩越水平，張力越爆衝。</span> 角度進入敏感區時，請優先改幾何並增加保守冗餘。
+        小提醒：<span class="mono">繩越水平，張力越爆衝。</span> φ 45° 以下／β 90° 以上已進入角度敏感區，請優先改幾何並增加保守冗餘。
       </div>
     
       <div class="twoBtns" style="margin-top:14px; grid-template-columns:1fr;">
@@ -964,7 +965,6 @@
       <div class="hint" style="margin-top:0">
         本工具由 <strong>散木團隊</strong> 開發製作<br/>
         教學架構與工程判斷／徐世豐<br/>
-        哲學分析顧問／林秀珍教授<br/>
         工具設計與互動介面／吳佩芳（朵朵）<br/>
         AI 協作輔助／ChatGPT
       </div>
@@ -1497,6 +1497,5 @@
 </script>
 </body>
 </html>
-
 
 
